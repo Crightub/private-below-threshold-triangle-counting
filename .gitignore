@@ -1,1 +1,8 @@
 /osqp-cpp
+/build
+/Eigen
+/benchmark
+/json
+
+*.png
+*.dot

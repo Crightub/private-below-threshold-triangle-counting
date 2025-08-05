@@ -17,7 +17,7 @@ public:
     void operator()(std::ostream &out, const Edge &e) const
     {
         const auto &ei = g_[e];
-        out << "[label=\"w=" << ei.weight + ei.noise << "\"]";
+        out << "[label=\"w=" << ei.weight << ", w' = " << ei.weight + ei.noise << "\"]";
     }
 
 private:
@@ -35,41 +35,42 @@ void save_graph(Graph g, std::string filename)
 
 int main(int argc, char *argv[])
 {
-    if (argc < 5)
+    if (argc < 7)
     {
-        std::cerr << "Usage: " << argv[0] << " <num_vertices> <edge_probability> <eps> <eps2> [-s]" << std::endl;
+        std::cerr << "Usage: " << argv[0] << " <num_vertices> <edge_probability> <weight_mu> <weight_std> <eps> <eps2> [-s]" << std::endl;
         return 1;
     }
 
-    size_t num_vertices = static_cast<size_t>(std::atoi(argv[1]));
+    int num_vertices = std::atoi(argv[1]);
     double edge_probability = std::atof(argv[2]);
-    double eps = std::atof(argv[3]);
-    double eps2 = std::atof(argv[4]);
+    double weight_mu = std::atof(argv[3]);
+    double weight_std = std::atof(argv[4]);
+    double eps = std::atof(argv[5]);
+    double eps2 = std::atof(argv[6]);
 
     bool save_graph_flag = false;
-    if (argc >= 6 && std::string(argv[5]) == "-s")
+    if (argc >= 8 && std::string(argv[7]) == "-s")
     {
         save_graph_flag = true;
     }
 
-    Graph g = generateERGraph(num_vertices, edge_probability);
-    g = assignGaussianWeights(g, -10, 0.5);
-    Graph noisyGraph = addDiscreteLaplaceNoise(g, eps);
+    Graph g = generateGraph(num_vertices, edge_probability, weight_mu, weight_std, eps);
 
     std::cout << "Generated graph with " << boost::num_vertices(g) << " vertices and "
               << boost::num_edges(g) << " edges." << std::endl;
 
-    std::size_t negative_triangles = count_negative_triangles(noisyGraph);
-    double smallest_index_count = randomized_private_counting(noisyGraph, eps, eps2);
-    double optimized_count = QPCountNegativeTriangles(noisyGraph, eps, eps2);
-
+    int negative_triangles = count_negative_triangles(g);
     std::cout << "opt: " << negative_triangles << std::endl;
+
+    double smallest_index_count = randomized_private_counting(g, eps, eps2);
     std::cout << "smallest index: " << smallest_index_count << std::endl;
-    std::cout << "optimized count: " << optimized_count << std::endl;
+    
+    // double optimized_count = QPCountNegativeTriangles(g, eps, eps2);
+    // std::cout << "optimized count: " << optimized_count << std::endl;
 
     if (save_graph_flag)
     {
-        save_graph(noisyGraph, "graph.dot");
+        save_graph(g, "graph.dot");
     }
     return 0;
 }
