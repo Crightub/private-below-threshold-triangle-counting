@@ -223,7 +223,7 @@ double extractTriangleCountFromQP(std::list<Triangle> triangles, std::map<Triang
         }
         
         // std::cout << "node: " << key << "neg T count" << localNegativeTriangleCount << ", " << trianglesToCount.size() << std::endl;
-        negativeTriangleCount += localNegativeTriangleCount + sampleLaplace(0, indicatorSum * ((1 + 2*lambda / std::pow((1 - lambda), 2))) / eps2);
+        negativeTriangleCount += localNegativeTriangleCount + sample_laplace(0, indicatorSum * ((1 + 2*lambda / std::pow((1 - lambda), 2))) / eps2);
         unnoisyTriangleCount += localNegativeTriangleCount;
     }
 

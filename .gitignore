@@ -1,8 +1,11 @@
 /osqp-cpp
+/matplotlib-cpp
 /build
 /Eigen
 /benchmark
+/logs
 /json
+/snap
 
 *.png
 *.dot

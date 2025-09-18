@@ -54,7 +54,7 @@ int main(int argc, char *argv[])
         save_graph_flag = true;
     }
 
-    Graph g = generateGraph(num_vertices, edge_probability, weight_mu, weight_std, eps);
+    Graph g = generate_graph(num_vertices, edge_probability, weight_mu, weight_std, eps);
 
     std::cout << "Generated graph with " << boost::num_vertices(g) << " vertices and "
               << boost::num_edges(g) << " edges." << std::endl;
@@ -62,9 +62,9 @@ int main(int argc, char *argv[])
     int negative_triangles = count_negative_triangles(g);
     std::cout << "opt: " << negative_triangles << std::endl;
 
-    double smallest_index_count = randomized_private_counting(g, eps, eps2);
-    std::cout << "smallest index: " << smallest_index_count << std::endl;
-    
+    // double smallest_index_count = randomized_private_counting(g, eps, eps2, false, false, false);
+    // std::cout << "smallest index: " << smallest_index_count << std::endl;
+    //
     // double optimized_count = QPCountNegativeTriangles(g, eps, eps2);
     // std::cout << "optimized count: " << optimized_count << std::endl;
 
