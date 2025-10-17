@@ -1,4 +1,4 @@
-#define BOOST_TEST_MODULE TriangleTest
+#define BOOST_TEST_MODULE TreapTest
 #include <boost/test/included/unit_test.hpp>
 
 #include "utils.h"
@@ -16,15 +16,6 @@ TreapNode *setup_treap(const std::vector<double> &values) {
     }
 
     return tree;
-}
-
-BOOST_AUTO_TEST_CASE(triangle_counting_complete_1) {
-    const Graph K_4 = complete_graph(4);
-    const std::list<Triangle> triangles = find_rooted_triangles(&K_4, 0);
-
-    BOOST_CHECK_EQUAL(triangles.size(), 3);
-
-    std::cout << triangles.size() << std::endl;
 }
 
 BOOST_AUTO_TEST_CASE(treap_1) {

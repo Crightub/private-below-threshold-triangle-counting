@@ -1,5 +1,4 @@
-#ifndef NEGATIVE_TRIANGLE_COUNTING_DISTRIBUTION_H
-#define NEGATIVE_TRIANGLE_COUNTING_DISTRIBUTION_H
+#pragma once
 
 #include "boost/random/uniform_real_distribution.hpp"
 #include <boost/random/cauchy_distribution.hpp>
@@ -7,9 +6,9 @@
 #include "utils.h"
 #include <boost/math/quadrature/tanh_sinh.hpp>
 
-inline int sample_discrete_laplace(const double lambda)
+inline int sample_discrete_laplace(const double p)
 {
-    std::geometric_distribution<int> geom(1 - lambda);
+    std::geometric_distribution<int> geom(1 - p);
 
     int u_sample = geom(rng);
     int v_sample = geom(rng);
@@ -69,5 +68,3 @@ public:
         }
     }
 };
-
-#endif //NEGATIVE_TRIANGLE_COUNTING_DISTRIBUTION_H

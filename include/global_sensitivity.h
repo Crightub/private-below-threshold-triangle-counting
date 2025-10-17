@@ -1,14 +1,15 @@
-#ifndef NEGATIVE_TRIANGLE_COUNTING_GLOBAL_SENSITIVITY_H
-#define NEGATIVE_TRIANGLE_COUNTING_GLOBAL_SENSITIVITY_H
+#pragma once
 
 #include <vector>
 
+#include "triangle.h"
+#include "utils.h"
+
 struct PrivateCountingConfig;
 
-double global_sensitivity(const std::vector<std::vector<bool> > &A, int i);
-void apply_global_sensitivity(const std::vector<std::vector<bool> > &A,
+int global_sensitivity(const Graph &g, int i, const std::list<Triangle> &triangles);
+
+void apply_global_sensitivity(const Graph &g,
                               const PrivateCountingConfig &cfg,
-                              std::vector<double> &counts);
-
-
-#endif //NEGATIVE_TRIANGLE_COUNTING_GLOBAL_SENSITIVITY_H
+                              std::vector<TriangleCount> &counts,
+                              const std::vector<std::list<Triangle> > &node2TriangleMap);

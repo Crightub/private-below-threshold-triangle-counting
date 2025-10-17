@@ -1,4 +1,3 @@
-/osqp-cpp
 /matplotlib-cpp
 /build
 /Eigen
@@ -9,3 +8,5 @@
 
 *.png
 *.dot
+
+/.vscode

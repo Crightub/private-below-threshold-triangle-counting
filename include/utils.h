@@ -1,8 +1,8 @@
-#ifndef NEGATIVE_TRIANGLE_COUNTING_UTILS_H
-#define NEGATIVE_TRIANGLE_COUNTING_UTILS_H
+#pragma once
 
 #include <vector>
 #include <iostream>
+#include <random>
 #include <Eigen/Sparse>
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/erdos_renyi_generator.hpp>
@@ -10,53 +10,74 @@
 #include <boost/log/trivial.hpp>
 #include <sstream>
 
+// <-- Graph Utils -->
+
 struct edge_info {
-    int weight;
-    int noise;
+    int weight = 0;
+    int noise = 0;
+    int load = 0;
+    int involved_triangles = 0;
 };
 
 typedef boost::adjacency_list<boost::vecS, boost::vecS, boost::undirectedS, boost::no_property, edge_info> Graph;
 typedef boost::sorted_erdos_renyi_iterator<boost::minstd_rand, Graph> ERGen;
 
+typedef boost::graph_traits<Graph>::edge_descriptor Edge;
+typedef boost::graph_traits<Graph>::vertex_descriptor Node;
+typedef boost::graph_traits<Graph>::adjacency_iterator AdjIter;
+
 extern boost::minstd_rand rng;
 
-double unbiased_estimator(int x, double p);
+std::vector<Node> neighbors(const Graph &g, Node &v);
 
-int biased_estimator(int w1, int w2, int w3);
+double unbiased_estimator(int x, double p, int lambda);
 
-double approximate_variance(double w1, double w2, double w3, double lambda);
+int biased_estimator(int w1, int w2, int w3, int lambda);
 
-struct DecisionVariableInfo {
-    int matrixIndex;
-    int countingNodeId;
-    double indicator;
-};
+inline bool is_same_edge(const Graph &g, Edge e1, Edge e2) {
+    auto s1 = boost::source(e1, g);
+    auto t1 = boost::target(e1, g);
 
-class Triangle {
-public:
-    int source_id;
-    int lower_id;
-    int higher_id;
+    auto s2 = boost::source(e2, g);
+    auto t2 = boost::target(e2, g);
 
-    Triangle(const int sId, const int Id1, const int Id2) : source_id(sId) {
-        higher_id = Id1 >= Id2 ? Id1 : Id2;
-        lower_id = Id1 < Id2 ? Id1 : Id2;
+    if (s1 == s2 && t1 == t2) {
+        return true;
     }
 
-    friend std::ostream &operator<<(std::ostream &os, const Triangle &t);
-
-    bool operator<(const Triangle &other) const {
-        std::array<int, 3> thisIds = {source_id, lower_id, higher_id};
-        std::array<int, 3> otherIds = {other.source_id, other.lower_id, other.higher_id};
-        std::sort(thisIds.begin(), thisIds.end());
-        std::sort(otherIds.begin(), otherIds.end());
-        return thisIds < otherIds;
+    if (s1 == t2 && t1 == s2) {
+        return true;
     }
+
+    return false;
+}
+
+struct TriangleCount {
+    int opt;
+    double unbiased;
+    double biased;
 };
 
-std::ostream &operator<<(std::ostream &os, const Triangle &t);
+// <-- Debug function -->
+inline long long compute_c4_instances(const Graph &g) {
+    long long sum = 0;
+    int max_load = 0;
+    auto load_map = get(&edge_info::load, g);
 
-std::list<Triangle> find_rooted_triangles(const Graph *g, const int root_id);
+    for (auto [e_it, e_it_end] = boost::edges(g); e_it != e_it_end; ++e_it) {
+        Edge e = *e_it;
+        int l = get(load_map, e);
+        if (l >= 2) {
+            sum += (static_cast<long long>(l) * (l - 1)) / 2;
+        }
+        max_load = std::max(max_load, l);
+    }
+
+    std::cout << "Max Load: " << max_load << std::endl;
+    return sum;
+}
+
+// <-- Print functions -->
 
 inline void print_vector(const std::vector<double> &v) {
     std::ostringstream oss;
@@ -116,5 +137,3 @@ inline void print_matrix(const Eigen::SparseMatrix<double> &A) {
 
     BOOST_LOG_TRIVIAL(info) << "\n" << oss.str();
 }
-
-#endif

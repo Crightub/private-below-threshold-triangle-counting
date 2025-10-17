@@ -1,54 +1,37 @@
-#include "basic_counting.h"
+#include "counting.h"
 #include "distribution.h"
-#include "treap.h"
-#include <boost/log/trivial.hpp>
-#include <boost/log/utility/setup/file.hpp>
 #include <boost/log/utility/setup/console.hpp>
-#include <boost/log/utility/setup/common_attributes.hpp>
+#include "treap.h"
 
 
-std::pair<std::vector<double>, double> compute_partial_triangle_weights(const Graph &g, int v, int i, bool inc) {
-    const Graph::vertex_descriptor root = boost::vertex(v, g);
-    auto weight_map = get(&edge_info::weight, g);
-    auto noise_map = get(&edge_info::noise, g);
-
-    std::vector<int> neighbors;
-    for (auto [nbrIt, nbrEnd] = boost::adjacent_vertices(root, g); nbrIt != nbrEnd; ++nbrIt) {
-        neighbors.push_back(*nbrIt);
-    }
-
-    int u = neighbors[i];
-
-    // BOOST_LOG_TRIVIAL(debug) << "v: " << v << " u: " << u;
-
+std::pair<std::vector<double>, double> compute_partial_triangle_weights(Graph &g,
+                                                                        const Edge &e,
+                                                                        const int lamba,
+                                                                        std::list<Triangle> &triangles,
+                                                                        bool inc) {
+    int w_e = Triangle::get_edge_weight(g, e);
     std::vector<double> partial_triangle_weights;
-    auto [e_uv, exists_uv] = boost::edge(u, v, g);
 
-    for (size_t j = 0; j < neighbors.size(); ++j) {
-        if (i == j)
+    for (Triangle &t: triangles) {
+        if (!t.contains_edge(g, e))
             continue;
 
-        int w = neighbors[j];
-        if (w < v)
-            continue;
+        auto [noise_e1, w_e1, w_e2, w_e3] = t.get_triangle_weights(g);
 
-        auto [e_vw, exists_vw] = boost::edge(v, w, g);
-        auto [e_uw, exists_uw] = boost::edge(u, w, g);
-
-        if (exists_uw) {
-            double partial_triangle_weight = get(noise_map, e_uw) + get(weight_map, e_uw) + get(weight_map, e_vw);
-            // BOOST_LOG_TRIVIAL(debug) << "u: " << u << " v: " << v << " w: " << w << " partial_triangle_weight: " << partial_triangle_weight;
-            partial_triangle_weights.push_back(partial_triangle_weight);
-        }
+        double partial_triangle_weight = noise_e1 + w_e1 + w_e2 + w_e3 - w_e;
+        partial_triangle_weights.push_back(partial_triangle_weight);
     }
 
     std::sort(partial_triangle_weights.begin(), partial_triangle_weights.end());
 
+    double target;
     if (inc) {
-        return {partial_triangle_weights, -1 - get(weight_map, e_uv)};
+        target = lamba - 1 - w_e;
     } else {
-        return {partial_triangle_weights, 1 - get(weight_map, e_uv)};
+        target = lamba - w_e;
     }
+
+    return {partial_triangle_weights, target};
 }
 
 std::pair<double, int> handle_boundary_case(TreapNode *left,
@@ -95,9 +78,9 @@ std::pair<double, int> find_k_smallest_distance(TreapNode *left, TreapNode *righ
         return {handle_nullptr_case(right, offR, k), 0};
     }
     if (right == nullptr) {
-        // std::cout << "find_k_smallest_distance: right is nullptr." << std::endl;
         return {handle_nullptr_case(left, offL, k), k};
     }
+
     if (k == 1) {
         double l_value = kth(left, 1)->key + offL;
         double r_value = kth(right, 1)->key + offR;
@@ -158,7 +141,6 @@ double compute_sum(TreapNode *left, TreapNode *right, double offL, double offR, 
 std::pair<bool, int> shift_set_can_be_increased(int t, double beta, TreapNode *left, TreapNode *right, double offL,
                                                 double offR) {
     auto [next_dis, i] = find_k_smallest_distance(left, right, t + 1, offL, offR);
-    // std::cout << "t: " << t << ", next_dis: " << next_dis << std::endl;
     return {static_cast<double>(t) / (t + 1) < std::exp(-beta * next_dis), i};
 }
 
@@ -174,8 +156,6 @@ std::pair<int, int> optimal_shift_set_size(TreapNode *left, TreapNode *right, co
         int m = (bound_l + bound_r) / 2;
         int l;
         std::tie(can_be_increased, l) = shift_set_can_be_increased(m, beta, left, right, offL, offR);
-        // std::cout << "optimal_shift_set_size: can_be_increased: " << can_be_increased << ", m: " << m <<  ", l: " << l << ", opt_l: " <<
-        //         opt_l << std::endl;
         if (can_be_increased) {
             bound_l = m + 1;
             opt_l = l;
@@ -197,6 +177,7 @@ double fixed_edge_objective(TreapNode *left,
                             double beta) {
     double sum_dis = compute_sum(left, right, offL, offR, l, t - l) + center_dis;
     double obj = t * std::exp(-beta * sum_dis);
+    // std::cout << "Fixed Edge objective: " << obj << ", center_dis: " << center_dis << std::endl;
     return obj;
 }
 
@@ -231,13 +212,16 @@ std::vector<double> build_targets(const std::vector<double> &centers, double tar
     return result;
 }
 
-double fixed_edge_sensitivity(const Graph &g, int v, int i, double beta, bool inc) {
-    // BOOST_LOG_TRIVIAL(info) << "Compute maximum objective value for fixed edge: " << i;
+double fixed_edge_sensitivity(Graph &g,
+                              Edge e,
+                              const int lambda,
+                              std::list<Triangle> &triangles, double beta,
+                              bool inc) {
     double opt = 0;
 
-    auto [partial_triangle_weights, target] = compute_partial_triangle_weights(g, v, i, inc);
+    auto [partial_triangle_weights, target] = compute_partial_triangle_weights(g, e, lambda, triangles, inc);
 
-    if (partial_triangle_weights.size() == 0) {
+    if (partial_triangle_weights.empty()) {
         return -1;
     }
 
@@ -247,52 +231,47 @@ double fixed_edge_sensitivity(const Graph &g, int v, int i, double beta, bool in
     double offL = 0;
     double offR = 0;
 
-    // TODO: If all partial triangle weights are larger than the target we cannot insert 0 as the first key
     if (partial_triangle_weights[0] <= target) {
         left = insert(left, 0);
-
-        for (int j = 1; j < partial_triangle_weights.size(); j++) {
-            right = insert(right, abs(partial_triangle_weights[0] - partial_triangle_weights[j]));
+        for (int i = 1; i < partial_triangle_weights.size(); i++) {
+            right = insert(right, abs(partial_triangle_weights[0] - partial_triangle_weights[i]));
         }
     } else {
         // edge case where all partial triangle weights are to the right of the target
         // -> left tree must be empty
-        for (int j = 0; j < partial_triangle_weights.size(); j++) {
-            right = insert(right, abs(target - partial_triangle_weights[j]));
+        for (double partial_triangle_weight: partial_triangle_weights) {
+            right = insert(right, abs(target - partial_triangle_weight));
         }
     }
 
     std::vector<double> centers = build_targets(partial_triangle_weights, target);
-    // BOOST_LOG_TRIVIAL(info) << "Centers:";
-
-    // print_left_right_treap(left, right);
     for (int j = 0; j < centers.size(); j++) {
+        // std::cout << "Current center: " << centers[j] << std::endl;
+        // print_left_right_treap(left, right);
         auto [t, opt_l] = optimal_shift_set_size(left, right, offL, offR, beta);
         double n = fixed_edge_objective(left, right, offL, offR, t, opt_l,
                                         abs(centers[j] - target), beta);
-
-        // BOOST_LOG_TRIVIAL(info) << "Center: " << centers[j]
-        //                         << ", t: " << t
-        //                         << ", obj: " << n;
-
+        // std::cout << "Objective Value for Center: " << n << std::endl;
         opt = std::max(opt, n);
-
         std::tie(left, right) = advance_center(left, right, offL, offR, centers, j);
-        // print_left_right_treap(left, right);
     }
 
     return opt;
 }
 
-double smooth_sensitivity(const Graph &g, int v, double beta) {
+double smooth_sensitivity(Graph &g, Node v, const int lambda, std::list<Triangle> &triangles, double beta) {
     double sens = 0;
 
+    #pragma omp parallel for reduction(max:sens)
     for (int i = 0; i < boost::degree(v, g); ++i) {
-        int u = boost::adjacent_vertices(v, g).first[i];
-        if (v > u) continue;
+        // Fix the edge e = (v,u) and compute the maximum smooth sensitivity achieved by increasing / decreasing e
+        Node u = boost::adjacent_vertices(v, g).first[i];
+        Edge e = boost::edge(u, v, g).first;
 
-        double sens_inc = fixed_edge_sensitivity(g, v, i, beta, true);
-        double sens_dec = fixed_edge_sensitivity(g, v, i, beta, false);
+        double sens_inc = fixed_edge_sensitivity(g, e, lambda, triangles, beta, true);
+        double sens_dec = fixed_edge_sensitivity(g, e, lambda, triangles, beta, false);
+
+        // std::cout << "Edge " << e << ", sens_inc: " << sens_inc << ", sens_dec: " << sens_dec << std::endl;
 
         double fixed_edge_sens = std::max(sens_inc, sens_dec);
         sens = std::max(fixed_edge_sens, sens);
@@ -301,22 +280,27 @@ double smooth_sensitivity(const Graph &g, int v, double beta) {
     return sens;
 }
 
-void apply_smooth_sensitivity(const Graph &g, const PrivateCountingConfig &cfg, std::vector<double> &counts) {
-    const double gamma = 4;
+void apply_smooth_sensitivity(Graph &g,
+                              const PrivateCountingConfig &cfg,
+                              std::vector<TriangleCount> &counts,
+                              std::vector<std::list<Triangle> > &node_triangle_map) {
+    const int gamma = 4;
     const double beta = cfg.count_eps / (2 * (gamma - 1));
-    const double sens_mult = cfg.use_unbiased_estimator
-                                 ? (1 + 2 * (std::exp(cfg.weight_eps) / std::pow(1 - std::exp(cfg.weight_eps), 2)))
-                                 : 1;
+    const double p = std::exp(-cfg.weight_eps);
+    const double unbiased_sens_mult = 1 + 2 * (p / std::pow(1 - p, 2));
     auto rv = PolynomialTailRV(gamma);
 
-    // BOOST_LOG_TRIVIAL(debug) << "Smooth sensitivity multiplier: " << sens_mult << " for use_unbiased_estimator: " << cfg.use_unbiased_estimator;
-
+#pragma omp parallel for
     for (int i = 0; i < counts.size(); i++) {
-        double sens = smooth_sensitivity(g, i, beta);
-        double sample = rv.sample();
-//         BOOST_LOG_TRIVIAL(debug) << "Smooth sensitivity: " << sens << ", laplace b: " << sens * sens_mult / cfg.
-// count_eps << ", noise sample: " << sample << std::endl;
-        double noise = 2 * (gamma - 1) / cfg.count_eps * sens_mult * sens * sample;
-        counts[i] += noise;
+        auto &triangles = node_triangle_map[i];
+
+        if (triangles.empty()) {
+            continue;
+        }
+
+        double sens = smooth_sensitivity(g, i, cfg.lambda, triangles, beta);
+
+        counts[i].unbiased += 2 * (gamma - 1) / cfg.count_eps * unbiased_sens_mult * sens * rv.sample();
+        counts[i].biased += 2 * (gamma - 1) / cfg.count_eps * sens * rv.sample();
     }
 }

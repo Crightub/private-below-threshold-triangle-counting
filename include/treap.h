@@ -1,9 +1,5 @@
-//
-// Created by Kevin Pfisterer on 02.09.25.
-//
+#pragma once
 
-#ifndef NEGATIVE_TRIANGLE_COUNTING_TREAP_H
-#define NEGATIVE_TRIANGLE_COUNTING_TREAP_H
 #include <iostream>
 #include <random>
 
@@ -142,6 +138,3 @@ inline void print_left_right_treap(TreapNode *left, TreapNode *right) {
     std::cout << "Right Treap: " << std::endl;
     print_treap(right);
 }
-
-
-#endif //NEGATIVE_TRIANGLE_COUNTING_TREAP_H

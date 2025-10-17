@@ -5,6 +5,7 @@ project(negative_triangle_counting)
 # Set C++ version
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_FLAGS_RELEASE "-O2")
 
 #Sanitizer options
 option(ENABLE_SANITIZERS "Build with Address/Undefined sanitizers" ON)
@@ -15,7 +16,6 @@ if (ENABLE_SANITIZERS)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${SANITIZER_FLAGS}")
     set(CMAKE_LINKER_FLAGS "${CMAKE_LINKER_FLAGS} ${SANITIZER_FLAGS}")
 endif ()
-
 
 # Enable OpenMP
 find_package(OpenMP)
@@ -33,28 +33,14 @@ find_package(Eigen3 3.3 REQUIRED NO_MODULE)
 
 find_package(Boost REQUIRED COMPONENTS log log_setup thread system)
 
-# uncomment for build with quadratic optimizer
-#add_subdirectory(osqp-cpp)
-#add_executable(negative_triangle_counting negative_triangle_count.cpp src/basic_counting.cpp src/graph_generation.cpp src/qp_counting.cpp src/utils.cpp)
-
-add_executable(negative_triangle_counting negative_triangle_count.cpp src/basic_counting.cpp src/graph_generation.cpp src/utils.cpp src/smooth_sensitivity.cpp src/global_sensitivity.cpp)
-
-target_link_libraries(negative_triangle_counting
-        nlohmann_json::nlohmann_json
-        Eigen3::Eigen
-        Boost::log
-        Boost::log_setup
-        Boost::thread
-        Boost::system
-)
-
 add_executable(benchmark
         src/benchmark.cpp
-        src/basic_counting.cpp
+        src/counting.cpp
         src/graph_generation.cpp
         src/utils.cpp
         src/smooth_sensitivity.cpp
         src/global_sensitivity.cpp
+        src/graph_statistics.cpp
 )
 
 target_link_libraries(benchmark
@@ -67,11 +53,60 @@ target_link_libraries(benchmark
 )
 
 
+add_executable(snap_benchmark
+        src/snap_benchmark.cpp
+        src/counting.cpp
+        src/graph_generation.cpp
+        src/utils.cpp
+        src/smooth_sensitivity.cpp
+        src/global_sensitivity.cpp
+        src/graph_statistics.cpp
+)
+
+target_link_libraries(snap_benchmark
+        nlohmann_json::nlohmann_json
+        Eigen3::Eigen
+        Boost::log
+        Boost::log_setup
+        Boost::thread
+        Boost::system
+)
+
 # Enable testing support
 enable_testing()
 
-add_executable(triangle_test test/triangle_test.cpp src/basic_counting.cpp src/graph_generation.cpp src/utils.cpp src/smooth_sensitivity.cpp src/global_sensitivity.cpp)
-target_link_libraries(triangle_test
+add_executable(treap_test test/treap_test.cpp src/counting.cpp src/graph_generation.cpp src/utils.cpp src/smooth_sensitivity.cpp src/global_sensitivity.cpp)
+target_link_libraries(treap_test
+        nlohmann_json::nlohmann_json
+        Eigen3::Eigen
+        Boost::log
+        Boost::log_setup
+        Boost::thread
+        Boost::system
+)
+
+add_executable(counting_test test/counting_test.cpp src/counting.cpp src/graph_generation.cpp src/utils.cpp src/smooth_sensitivity.cpp src/global_sensitivity.cpp src/graph_statistics.cpp)
+target_link_libraries(counting_test
+        nlohmann_json::nlohmann_json
+        Eigen3::Eigen
+        Boost::log
+        Boost::log_setup
+        Boost::thread
+        Boost::system
+)
+
+add_executable(assignment_test test/assignment_test.cpp src/counting.cpp src/graph_generation.cpp src/utils.cpp src/smooth_sensitivity.cpp src/global_sensitivity.cpp src/graph_statistics.cpp)
+target_link_libraries(assignment_test
+        nlohmann_json::nlohmann_json
+        Eigen3::Eigen
+        Boost::log
+        Boost::log_setup
+        Boost::thread
+        Boost::system
+)
+
+add_executable(sensitivity_test test/sensitivity_test.cpp src/counting.cpp src/graph_generation.cpp src/utils.cpp src/smooth_sensitivity.cpp src/global_sensitivity.cpp src/graph_statistics.cpp)
+target_link_libraries(sensitivity_test
         nlohmann_json::nlohmann_json
         Eigen3::Eigen
         Boost::log
@@ -82,14 +117,14 @@ target_link_libraries(triangle_test
 
 find_package(Python3 COMPONENTS Development NumPy REQUIRED)
 
-add_executable(counting_test test/counting_test.cpp src/basic_counting.cpp src/graph_generation.cpp src/utils.cpp src/smooth_sensitivity.cpp src/global_sensitivity.cpp)
+add_executable(distribution_test test/distribution_test.cpp src/counting.cpp src/graph_generation.cpp src/utils.cpp src/smooth_sensitivity.cpp src/global_sensitivity.cpp src/graph_statistics.cpp)
 
-target_include_directories(counting_test PRIVATE
+target_include_directories(distribution_test PRIVATE
         ${Python3_INCLUDE_DIRS}
         ${Python3_NumPy_INCLUDE_DIRS}
 )
 
-target_link_libraries(counting_test
+target_link_libraries(distribution_test
         nlohmann_json::nlohmann_json
         Eigen3::Eigen
         Boost::log
@@ -99,18 +134,18 @@ target_link_libraries(counting_test
         ${Python3_LIBRARIES}
 )
 
-# uncomment for build with quadratic optimizer
-#target_link_libraries(negative_triangle_counting
-#    osqp-cpp
-#)
-
-# OpenMP if needed
 if (OpenMP_CXX_FOUND)
-    target_link_libraries(negative_triangle_counting OpenMP::OpenMP_CXX)
-    target_link_libraries(triangle_test OpenMP::OpenMP_CXX)
+    target_link_libraries(treap_test OpenMP::OpenMP_CXX)
+    target_link_libraries(assignment_test OpenMP::OpenMP_CXX)
+    target_link_libraries(sensitivity_test OpenMP::OpenMP_CXX)
     target_link_libraries(counting_test OpenMP::OpenMP_CXX)
+    target_link_libraries(distribution_test OpenMP::OpenMP_CXX)
     target_link_libraries(benchmark OpenMP::OpenMP_CXX)
+    target_link_libraries(snap_benchmark OpenMP::OpenMP_CXX)
 endif ()
 
-add_test(NAME TriangleTest COMMAND triangle_test)
+add_test(NAME TreapTest COMMAND treap_test)
+add_test(NAME SensitivityTest COMMAND sensitivity_test)
+add_test(NAME AssignmentTest COMMAND assignment_test)
 add_test(NAME CountingTest COMMAND counting_test)
+add_test(NAME DistributionTest COMMAND distribution_test)

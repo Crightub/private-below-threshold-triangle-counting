@@ -1,5 +1,4 @@
-#ifndef NEGATIVE_TRIANGLE_COUNTING_LOGGER_H
-#define NEGATIVE_TRIANGLE_COUNTING_LOGGER_H
+#pragma once
 
 #include <boost/log/trivial.hpp>
 #include <boost/log/utility/setup/file.hpp>
@@ -22,5 +21,3 @@ inline void init_logging(const std::string* file_name) {
         );
     }
 }
-
-#endif //NEGATIVE_TRIANGLE_COUNTING_LOGGER_H

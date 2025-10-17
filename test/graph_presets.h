@@ -16,7 +16,6 @@ inline void assign_weights_and_noise(
         int u = boost::source(*ei, g);
         int v = boost::target(*ei, g);
 
-        // undirected graph → normalize ordering
         auto key = std::minmax(u, v);
 
         if (weights.count(key)) {
@@ -40,6 +39,7 @@ inline Graph complete_graph(int n) {
             boost::add_edge(u, v, g);
         }
     }
+
     return g;
 }
 
@@ -179,6 +179,41 @@ inline Graph example_graph_2() {
         {{3, 4}, -1},
         {{4, 5}, -1},
         {{1, 5}, -1},
+    };
+
+    std::map<std::pair<int, int>, int> noise = {
+        {{0, 1}, 0},
+        {{0, 2}, 0},
+        {{0, 3}, 0},
+        {{0, 4}, 0},
+        {{0, 5}, 0},
+        {{1, 2}, 0},
+        {{2, 3}, 0},
+        {{3, 4}, 0},
+        {{4, 5}, 0},
+        {{1, 5}, 0},
+    };
+
+    assign_weights_and_noise(g, weights, noise);
+
+    return g;
+}
+
+inline Graph example_graph_2_scaled() {
+    // Same graph structure as example_graph_2 but with weights increased by 5
+    Graph g = star_outline_graph(6);
+
+    std::map<std::pair<int, int>, int> weights = {
+        {{0, 1}, 5},
+        {{0, 2}, 6},
+        {{0, 3}, 4},
+        {{0, 4}, 4},
+        {{0, 5}, 4},
+        {{1, 2}, 4},
+        {{2, 3}, 4},
+        {{3, 4}, 4},
+        {{4, 5}, 4},
+        {{1, 5}, 4},
     };
 
     std::map<std::pair<int, int>, int> noise = {
