@@ -124,9 +124,7 @@ private:
     void assign_by_index(Graph &g) {
         source_node = *std::min_element(nodes.begin(), nodes.end());
         update_noisy_edge(g);
-
         increase_edge_load(g, noisy_edge);
-
         is_assigned = true;
     }
 

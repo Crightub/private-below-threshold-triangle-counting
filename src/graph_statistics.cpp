@@ -34,8 +34,7 @@ void degree_vector(const Graph &g, std::vector<size_t> &degree) {
     }
 }
 
-std::list<Triangle> find_triangles(Graph &g) {
-    std::list<Triangle> triangles;
+std::vector<Triangle> find_triangles(Graph &g) {
     auto involved_triangles_map = get(&edge_info::involved_triangles, g);
 
     const size_t n = boost::num_vertices(g);
@@ -43,17 +42,21 @@ std::list<Triangle> find_triangles(Graph &g) {
     std::vector<size_t> degree(n);
     degree_vector(g, degree);
 
-    // order: sorts the vertex indices by degree in decreasing order
-    // rank: ranking of vertex i in according to degree
     std::vector<int> order(n), rank(n);
     compute_rank(degree, n, order, rank);
 
     auto forward = forward_adjacency_lists(g, n, rank);
 
-    for (int i = 0; i < n; ++i) {
-        const Node v = order[i];
+    const int max_threads = omp_get_max_threads();
+    std::vector<std::vector<Triangle>> local_triangles(max_threads);
 
-        for (const Node u: forward[v]) {
+#pragma omp parallel for schedule(dynamic)
+    for (int i = 0; i < static_cast<int>(n); ++i) {
+        const Node v = order[i];
+        const int tid = omp_get_thread_num();
+        auto &local_vec = local_triangles[tid];
+
+        for (const Node u : forward[v]) {
             const auto &Nu = forward[u];
             const auto &Nv = forward[v];
 
@@ -62,56 +65,45 @@ std::list<Triangle> find_triangles(Graph &g) {
 
             while (nu_itr != Nu.end() && nv_itr != Nv.end()) {
                 if (*nu_itr == *nv_itr) {
-                    Node w = *nu_itr;
+                    const Node w = *nu_itr;
 
-                    triangles.emplace_back(g, v, u, w);
+                    local_vec.emplace_back(g, v, u, w);
 
                     auto [e1, e1_exists] = edge(u, v, g);
                     auto [e2, e2_exists] = edge(u, w, g);
                     auto [e3, e3_exists] = edge(v, w, g);
 
+#pragma omp atomic
                     involved_triangles_map[e1]++;
+#pragma omp atomic
                     involved_triangles_map[e2]++;
+#pragma omp atomic
                     involved_triangles_map[e3]++;
 
                     ++nu_itr;
                     ++nv_itr;
                 } else if (*nu_itr < *nv_itr) {
                     ++nu_itr;
-                } else if (*nv_itr < *nu_itr) {
+                } else {
                     ++nv_itr;
                 }
             }
         }
     }
 
-    return triangles;
-}
+    // === Merge all local triangle vectors into a single contiguous vector ===
+    size_t total_size = 0;
+    for (const auto &vec : local_triangles)
+        total_size += vec.size();
 
+    std::vector<Triangle> triangles;
+    triangles.reserve(total_size);
 
-std::list<Triangle> find_triangles_naive(const Graph &g) {
-    std::list<Triangle> triangles;
-
-    size_t n = boost::num_vertices(g);
-
-    for (int v = 0; v < n; ++v) {
-        for (int u = v + 1; u < n; ++u) {
-            auto [e_vu, e_vu_exists] = boost::edge(u, v, g);
-            if (!e_vu_exists) continue;
-            for (int w = u + 1; w < n; ++w) {
-                auto [e_wu, e_wu_exists] = boost::edge(w, u, g);
-                if (!e_wu_exists) continue;
-
-                auto [e_vw, e_vw_exists] = boost::edge(w, v, g);
-                if (!e_vw_exists) continue;
-
-                if (v >= u || v >= w || u >= w) {
-                    std::cout << "Error" << std::endl;
-                }
-
-                triangles.push_back(Triangle(g, u, v, w));
-            }
-        }
+    for (auto &vec : local_triangles) {
+        triangles.insert(triangles.end(),
+                         std::make_move_iterator(vec.begin()),
+                         std::make_move_iterator(vec.end()));
+        vec.clear();
     }
 
     return triangles;

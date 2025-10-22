@@ -4,7 +4,7 @@
 /benchmark
 /logs
 /json
-/snap
+/data
 
 *.png
 *.dot

@@ -177,7 +177,6 @@ double fixed_edge_objective(TreapNode *left,
                             double beta) {
     double sum_dis = compute_sum(left, right, offL, offR, l, t - l) + center_dis;
     double obj = t * std::exp(-beta * sum_dis);
-    // std::cout << "Fixed Edge objective: " << obj << ", center_dis: " << center_dis << std::endl;
     return obj;
 }
 
@@ -246,12 +245,9 @@ double fixed_edge_sensitivity(Graph &g,
 
     std::vector<double> centers = build_targets(partial_triangle_weights, target);
     for (int j = 0; j < centers.size(); j++) {
-        // std::cout << "Current center: " << centers[j] << std::endl;
-        // print_left_right_treap(left, right);
         auto [t, opt_l] = optimal_shift_set_size(left, right, offL, offR, beta);
         double n = fixed_edge_objective(left, right, offL, offR, t, opt_l,
                                         abs(centers[j] - target), beta);
-        // std::cout << "Objective Value for Center: " << n << std::endl;
         opt = std::max(opt, n);
         std::tie(left, right) = advance_center(left, right, offL, offR, centers, j);
     }
@@ -290,7 +286,7 @@ void apply_smooth_sensitivity(Graph &g,
     const double unbiased_sens_mult = 1 + 2 * (p / std::pow(1 - p, 2));
     auto rv = PolynomialTailRV(gamma);
 
-#pragma omp parallel for
+    #pragma omp parallel for
     for (int i = 0; i < counts.size(); i++) {
         auto &triangles = node_triangle_map[i];
 

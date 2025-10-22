@@ -52,26 +52,6 @@ target_link_libraries(benchmark
         Boost::system
 )
 
-
-add_executable(snap_benchmark
-        src/snap_benchmark.cpp
-        src/counting.cpp
-        src/graph_generation.cpp
-        src/utils.cpp
-        src/smooth_sensitivity.cpp
-        src/global_sensitivity.cpp
-        src/graph_statistics.cpp
-)
-
-target_link_libraries(snap_benchmark
-        nlohmann_json::nlohmann_json
-        Eigen3::Eigen
-        Boost::log
-        Boost::log_setup
-        Boost::thread
-        Boost::system
-)
-
 # Enable testing support
 enable_testing()
 
@@ -141,7 +121,6 @@ if (OpenMP_CXX_FOUND)
     target_link_libraries(counting_test OpenMP::OpenMP_CXX)
     target_link_libraries(distribution_test OpenMP::OpenMP_CXX)
     target_link_libraries(benchmark OpenMP::OpenMP_CXX)
-    target_link_libraries(snap_benchmark OpenMP::OpenMP_CXX)
 endif ()
 
 add_test(NAME TreapTest COMMAND treap_test)

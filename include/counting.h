@@ -33,7 +33,7 @@ struct PrivateCountingConfig {
 };
 
 PrivateCountingResult private_counting(Graph &g, PrivateCountingConfig &base_cfg,
-                                       const std::list<Triangle> *ptr_triangles);
+                                       const std::vector<Triangle> *ptr_triangles);
 
 void count_local_negative_triangles(Graph &g,
                                     const PrivateCountingConfig &base_cfg,

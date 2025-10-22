@@ -12,7 +12,7 @@ void count_local_negative_triangles(Graph &g,
                                     const PrivateCountingConfig &base_cfg,
                                     std::vector<TriangleCount> &counts,
                                     std::vector<std::list<Triangle> > &node_triangle_map,
-                                    std::list<Triangle> &triangles
+                                    std::vector<Triangle> &triangles
 ) {
     const double p = std::exp(-base_cfg.weight_eps);
 
@@ -20,7 +20,7 @@ void count_local_negative_triangles(Graph &g,
         t.assign_triangle(g, base_cfg.use_load_balancing);
         auto [noise_e1, w_e1, w_e2, w_e3] = t.get_triangle_weights(g);
 
-        counts[t.source_node].opt += biased_estimator(w_e1, w_e2, w_e3, base_cfg.lambda);
+        counts[t.source_node].opt +=  biased_estimator(w_e1, w_e2, w_e3, base_cfg.lambda);
         counts[t.source_node].unbiased += unbiased_estimator(noise_e1 + w_e1 + w_e2 + w_e3, p, base_cfg.lambda);;
         counts[t.source_node].biased += biased_estimator(noise_e1 + w_e1, w_e2, w_e3, base_cfg.lambda);
         node_triangle_map[t.source_node].push_back(t);
@@ -55,11 +55,11 @@ void print_c4_info(const Graph &g, const std::vector<std::list<Triangle> > &node
 PrivateCountingResult private_counting(
     Graph &g,
     PrivateCountingConfig &base_cfg,
-    const std::list<Triangle> *ptr_triangles) {
+    const std::vector<Triangle> *ptr_triangles) {
     std::size_t n = num_vertices(g);
     std::vector<TriangleCount> global_counts(n);
     std::vector<std::list<Triangle> > node_triangle_map = std::vector<std::list<Triangle> >(n);
-    std::list<Triangle> triangles;
+    std::vector<Triangle> triangles;
 
     if (ptr_triangles == nullptr) {
         triangles = find_triangles(g);
@@ -79,15 +79,15 @@ PrivateCountingResult private_counting(
     global_cfg.use_smooth_sensitivity = false;
     publish_local_counts(g, global_cfg, global_counts, node_triangle_map);
 
-    std::cout << "Publish counts with smooth sensitivity." << std::endl;
-    auto smooth_cfg = base_cfg;
-    smooth_cfg.use_smooth_sensitivity = true;
-    publish_local_counts(g, smooth_cfg, smooth_counts, node_triangle_map);
+    // std::cout << "Publish counts with smooth sensitivity." << std::endl;
+    // auto smooth_cfg = base_cfg;
+    // smooth_cfg.use_smooth_sensitivity = true;
+    // publish_local_counts(g, smooth_cfg, smooth_counts, node_triangle_map);
 
     int opt = 0;
     double global_unbiased = 0;
     double global_biased = 0;
-    for (TriangleCount &c: global_counts) {
+    for (TriangleCount c: global_counts) {
         opt += c.opt;
         global_unbiased += c.unbiased;
         global_biased += c.biased;

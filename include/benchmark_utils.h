@@ -99,13 +99,14 @@ struct Stat {
 
 struct SnapBenchmarkConfig {
     std::string graph_name;
-    int instances_per_size;
+    int instances_per_iter;
     int iterations_count;
     double start_value;
     double step_size;
     Param param;
     bool compare_load_balancing;
 
+    int instance_size;
     double weight_eps;
     double count_eps;
     int lambda;
@@ -115,7 +116,7 @@ inline void print_benchmark_config(const SnapBenchmarkConfig &cfg) {
     std::cout << "Benchmark Config\n------------------\n"
             << "Graph: " << cfg.graph_name << std::endl
             << "Flexible Parameter: " << to_string(cfg.param) << std::endl
-            << "Instances per Size: " << cfg.instances_per_size << std::endl
+            << "Instances per Iteration: " << cfg.instances_per_iter << std::endl
             << "Iterations: " << cfg.iterations_count << std::endl
             << "Step Size: " << cfg.step_size << std::endl
             << "Weight eps: " << cfg.weight_eps << std::endl
@@ -134,7 +135,7 @@ inline void to_json(json &j, const SnapBenchmarkConfig &cfg) {
     j = {
         {"graph_name", cfg.graph_name},
         {"parameter", to_string(cfg.param)},
-        {"instances_per_size", cfg.instances_per_size},
+        {"instances_per_iter", cfg.instances_per_iter},
         {"iterations_count", cfg.iterations_count},
         {"step_size", cfg.step_size},
         {"weight_eps", cfg.weight_eps},
@@ -160,17 +161,19 @@ inline void to_json(json &j, const Stat &stat) {
 
 inline SnapBenchmarkConfig parse_snap_benchmark_config(int argc, char *argv[]) {
     if (argc != 10 && argc != 6) {
-        std::cerr << "Usage: " << argv[0]
+        std::cerr << "Single Iteration Benchmark: " << argv[0] <<
+                " <graph_name> <instances> <weight_eps> <count_eps> <lambda>" << std::endl
+                << "Multi Iteration Benchmark: " << argv[0]
                 << " <graph_name> <instances_per_size> <iterations_count> <start_value> <step_size> <param> <weight_eps> <count_eps> <lambda>"
                 << std::endl;
-        std::exit(1);
+        exit(1);
     }
 
     if (argc == 10) {
         SnapBenchmarkConfig settings{};
 
         settings.graph_name = argv[1];
-        settings.instances_per_size = std::atoi(argv[2]);
+        settings.instances_per_iter = std::atoi(argv[2]);
         settings.iterations_count = std::atoi(argv[3]);
         settings.start_value = std::atof(argv[4]);
         settings.step_size = std::atof(argv[5]);
@@ -186,13 +189,13 @@ inline SnapBenchmarkConfig parse_snap_benchmark_config(int argc, char *argv[]) {
     SnapBenchmarkConfig settings{};
 
     settings.graph_name = argv[1];
-    settings.iterations_count = std::atoi(argv[2]);
+    settings.instances_per_iter = std::atoi(argv[2]);
     settings.weight_eps = std::atof(argv[3]);
     settings.count_eps = std::atof(argv[4]);
     settings.lambda = std::atoi(argv[5]);
 
     // Set dummy setting
-    settings.instances_per_size = 1;
+    settings.iterations_count = 1;
     settings.start_value = settings.weight_eps;
     settings.step_size = 0;
     settings.param = Param::WeightEps;
@@ -200,7 +203,7 @@ inline SnapBenchmarkConfig parse_snap_benchmark_config(int argc, char *argv[]) {
     return settings;
 }
 
-inline void set_param(SnapBenchmarkConfig &cfg, const Param param, double value) {
+inline void set_param(PrivateCountingConfig &cfg, const Param param, double value) {
     switch (param) {
         case Param::WeightEps:
             cfg.weight_eps = value;
@@ -210,8 +213,9 @@ inline void set_param(SnapBenchmarkConfig &cfg, const Param param, double value)
             break;
         case Param::Lambda:
             cfg.lambda = value;
+            break;
         default:
-            throw std::invalid_argument("Unknown parameter name.");
+            break;
     }
 }
 
@@ -273,7 +277,6 @@ inline Graph extract_random_subgraph(const Graph &graph, std::size_t size) {
     for (Node v = 0; v < n; ++v)
         vertices.push_back(v);
 
-    // Sample vertices for subgraph
     std::shuffle(vertices.begin(), vertices.end(), rng);
     vertices.resize(size);
 

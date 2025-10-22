@@ -41,7 +41,6 @@ void apply_global_sensitivity(const Graph &g,
                               std::vector<TriangleCount> &counts,
                               const std::vector<std::list<Triangle> > &node2TriangleMap) {
     const double unbiased_sens_mul = 1 + 2 * (std::exp(cfg.weight_eps) / std::pow(1 - std::exp(cfg.weight_eps), 2));
-    // BOOST_LOG_TRIVIAL(info) << "Global sensitivity multiplier: " << sens_mult << " for use_unbiased_estimator: " << cfg.use_unbiased_estimator;
 
     for (int i = 0; i < counts.size(); ++i) {
         std::list<Triangle> triangles = node2TriangleMap[i];

@@ -42,7 +42,7 @@ BOOST_AUTO_TEST_CASE(find_triangles_3) {
 
 
 BOOST_AUTO_TEST_CASE(find_triangles_epinions) {
-    std::string file_name = "../snap/epinions.csv";
+    std::string file_name = "../data/epinions.csv";
     Graph g = load_snap_epinions_graph(file_name);
 
     auto triangles = find_triangles(g);
@@ -64,7 +64,7 @@ namespace std {
 }
 
 BOOST_AUTO_TEST_CASE(find_triangles_bitcoinotc) {
-    std::string file_name = "../snap/bitcoinotc.csv";
+    std::string file_name = "../data/bitcoinotc.csv";
     Graph g = load_snap_bitcoin_graph(file_name);
 
     std::cout << "Edge count: " << boost::num_edges(g) << std::endl;
@@ -119,11 +119,11 @@ void benchmark_assignment( Graph &g) {
 }
 
 BOOST_AUTO_TEST_CASE(snap_bitcoin_assignment) {
-    Graph g = load_snap_epinions_graph("../snap/bitcoinotc.csv");
+    Graph g = load_snap_epinions_graph("../data/bitcoinotc.csv");
     benchmark_assignment(g);
 }
 
 BOOST_AUTO_TEST_CASE(snap_epinions_assignment) {
-    Graph g = load_snap_epinions_graph("../snap/epinions.csv");
+    Graph g = load_snap_epinions_graph("../data/epinions.csv");
     benchmark_assignment(g);
 }

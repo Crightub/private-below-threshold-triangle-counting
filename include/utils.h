@@ -78,7 +78,6 @@ inline long long compute_c4_instances(const Graph &g) {
 }
 
 // <-- Print functions -->
-
 inline void print_vector(const std::vector<double> &v) {
     std::ostringstream oss;
     oss << "[";
@@ -90,7 +89,6 @@ inline void print_vector(const std::vector<double> &v) {
     }
     oss << "]";
     std::cout << oss.str() << std::endl;
-    // BOOST_LOG_TRIVIAL(info) << oss.str();
 }
 
 inline void print_matrix(const Eigen::VectorXd &A) {
@@ -101,7 +99,6 @@ inline void print_matrix(const Eigen::VectorXd &A) {
             oss << "\t";
         }
     }
-    BOOST_LOG_TRIVIAL(info) << oss.str();
 }
 
 inline void print_matrix(const std::vector<std::vector<double> > &A) {
@@ -117,7 +114,6 @@ inline void print_matrix(const std::vector<std::vector<double> > &A) {
             oss << "\n";
         }
     }
-    BOOST_LOG_TRIVIAL(info) << "\n" << oss.str();
 }
 
 inline void print_matrix(const Eigen::SparseMatrix<double> &A) {
@@ -134,6 +130,4 @@ inline void print_matrix(const Eigen::SparseMatrix<double> &A) {
             }
         }
     }
-
-    BOOST_LOG_TRIVIAL(info) << "\n" << oss.str();
 }
