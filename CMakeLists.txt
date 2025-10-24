@@ -8,7 +8,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_FLAGS_RELEASE "-O2")
 
 #Sanitizer options
-option(ENABLE_SANITIZERS "Build with Address/Undefined sanitizers" ON)
+# option(ENABLE_SANITIZERS "Build with Address/Undefined sanitizers" ON)
 
 if (ENABLE_SANITIZERS)
     message(STATUS "Sanitizers enabled")
@@ -24,14 +24,10 @@ if (OpenMP_CXX_FOUND)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
 endif ()
 
-include_directories(/usr/local/opt/boost/include)
+find_package(Boost REQUIRED)
+
 include_directories(include)
-
-find_package(nlohmann_json REQUIRED)
-
-find_package(Eigen3 3.3 REQUIRED NO_MODULE)
-
-find_package(Boost REQUIRED COMPONENTS log log_setup thread system)
+include_directories(${CMAKE_SOURCE_DIR}/external)
 
 add_executable(benchmark
         src/benchmark.cpp
@@ -44,55 +40,29 @@ add_executable(benchmark
 )
 
 target_link_libraries(benchmark
-        nlohmann_json::nlohmann_json
-        Eigen3::Eigen
-        Boost::log
-        Boost::log_setup
-        Boost::thread
-        Boost::system
-)
+        Boost::headers)
 
 # Enable testing support
 enable_testing()
 
 add_executable(treap_test test/treap_test.cpp src/counting.cpp src/graph_generation.cpp src/utils.cpp src/smooth_sensitivity.cpp src/global_sensitivity.cpp)
 target_link_libraries(treap_test
-        nlohmann_json::nlohmann_json
-        Eigen3::Eigen
-        Boost::log
-        Boost::log_setup
-        Boost::thread
-        Boost::system
+        Boost::headers
 )
 
 add_executable(counting_test test/counting_test.cpp src/counting.cpp src/graph_generation.cpp src/utils.cpp src/smooth_sensitivity.cpp src/global_sensitivity.cpp src/graph_statistics.cpp)
 target_link_libraries(counting_test
-        nlohmann_json::nlohmann_json
-        Eigen3::Eigen
-        Boost::log
-        Boost::log_setup
-        Boost::thread
-        Boost::system
+        Boost::headers
 )
 
 add_executable(assignment_test test/assignment_test.cpp src/counting.cpp src/graph_generation.cpp src/utils.cpp src/smooth_sensitivity.cpp src/global_sensitivity.cpp src/graph_statistics.cpp)
 target_link_libraries(assignment_test
-        nlohmann_json::nlohmann_json
-        Eigen3::Eigen
-        Boost::log
-        Boost::log_setup
-        Boost::thread
-        Boost::system
+        Boost::headers
 )
 
 add_executable(sensitivity_test test/sensitivity_test.cpp src/counting.cpp src/graph_generation.cpp src/utils.cpp src/smooth_sensitivity.cpp src/global_sensitivity.cpp src/graph_statistics.cpp)
 target_link_libraries(sensitivity_test
-        nlohmann_json::nlohmann_json
-        Eigen3::Eigen
-        Boost::log
-        Boost::log_setup
-        Boost::thread
-        Boost::system
+        Boost::headers
 )
 
 find_package(Python3 COMPONENTS Development NumPy REQUIRED)
@@ -105,12 +75,7 @@ target_include_directories(distribution_test PRIVATE
 )
 
 target_link_libraries(distribution_test
-        nlohmann_json::nlohmann_json
-        Eigen3::Eigen
-        Boost::log
-        Boost::log_setup
-        Boost::thread
-        Boost::system
+        Boost::headers
         ${Python3_LIBRARIES}
 )
 

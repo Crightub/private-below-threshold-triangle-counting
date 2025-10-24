@@ -1,4 +1,5 @@
 #include "graph_statistics.h"
+#include <omp.h>
 
 std::vector<std::set<Node>> forward_adjacency_lists(const Graph &g, const int n, const std::vector<int> &rank) {
     auto forward = std::vector<std::set<Node>>(n, std::set<Node>());
@@ -47,7 +48,8 @@ std::vector<Triangle> find_triangles(Graph &g) {
 
     auto forward = forward_adjacency_lists(g, n, rank);
 
-    const int max_threads = omp_get_max_threads();
+    const int max_threads = 4;
+    omp_set_num_threads(max_threads);
     std::vector<std::vector<Triangle>> local_triangles(max_threads);
 
 #pragma omp parallel for schedule(dynamic)

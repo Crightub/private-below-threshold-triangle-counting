@@ -76,7 +76,7 @@ Benchmark run_instance_benchmark(BenchmarkConfig cfg) {
 
         for (int j = 0; j < cfg.instances_per_iter; ++j) {
             add_discrete_laplace_noise(g_load_balance, cfg.weight_eps);
-
+            std::cout << "Iteration: " << j << std::endl;
             std::cout << "Compute load balanced result..." << std::endl;
             PrivateCountingResult res_load_balance = private_counting(g_load_balance, load_balancing_base_cfg,
                                                                       &triangles_load_balance);
@@ -169,6 +169,7 @@ Benchmark run_param_benchmark(BenchmarkConfig cfg) {
 }
 
 int main(int argc, char *argv[]) {
+	std::cout << "TEST" << std::endl;
     BenchmarkConfig cfg = parse_benchmark_config(argc, argv);
     cfg.compare_load_balancing = true;
     std::string base_file_name = generate_filename(cfg);

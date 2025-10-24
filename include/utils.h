@@ -3,7 +3,6 @@
 #include <vector>
 #include <iostream>
 #include <random>
-#include <Eigen/Sparse>
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/erdos_renyi_generator.hpp>
 #include <boost/random/linear_congruential.hpp>
@@ -92,15 +91,6 @@ inline void print_vector(const std::vector<double> &v) {
     std::cout << oss.str() << std::endl;
 }
 
-inline void print_matrix(const Eigen::VectorXd &A) {
-    std::ostringstream oss;
-    for (int i = 0; i < A.size(); ++i) {
-        oss << A[i];
-        if (i < A.size() - 1) {
-            oss << "\t";
-        }
-    }
-}
 
 inline void print_matrix(const std::vector<std::vector<double> > &A) {
     std::ostringstream oss;
@@ -113,22 +103,6 @@ inline void print_matrix(const std::vector<std::vector<double> > &A) {
         }
         if (i < A.size() - 1) {
             oss << "\n";
-        }
-    }
-}
-
-inline void print_matrix(const Eigen::SparseMatrix<double> &A) {
-    const int max_size = 15;
-    std::ostringstream oss;
-
-    if (A.rows() <= max_size && A.cols() <= max_size) {
-        Eigen::MatrixXd denseA(A);
-        oss << denseA; // Eigen already has stream operator
-    } else {
-        for (int k = 0; k < A.outerSize(); ++k) {
-            for (Eigen::SparseMatrix<double>::InnerIterator it(A, k); it; ++it) {
-                oss << "(" << it.row() << ", " << it.col() << ") = " << it.value() << "\n";
-            }
         }
     }
 }

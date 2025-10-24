@@ -8,7 +8,7 @@
 #include "utils.h"
 struct PrivateCountingConfig;
 
-int global_sensitivity(const Graph &g, int i, const std::list<Triangle> &triangles) {
+int global_sensitivity(const Graph &g, int i, const std::list<int> &triangle_index_list, const std::vector<Triangle> &triangles) {
     int sens = 0;
 
     std::vector<Edge> incident_edges;
@@ -20,14 +20,15 @@ int global_sensitivity(const Graph &g, int i, const std::list<Triangle> &triangl
     for (size_t i = 0; i < incident_edges.size(); ++i) {
         Edge e = incident_edges[i];
         int count = 0;
-
-        for (const auto &t : triangles) {
-            for (Edge edge_in_triangle : t.edges) {
-                if (is_same_edge(g, edge_in_triangle, e)) {
-                    ++count;
-                }
-            }
-        }
+	
+	for (size_t j = 0; j < triangle_index_list.size(); ++j){
+	    auto t = triangles[j];
+	    for(Edge edge_in_triangle: t.edges){
+	        if(is_same_edge(g, edge_in_triangle, e)){
+		   ++count;
+		}
+	    }
+	}
 
         sens = std::max(sens, count);
     }
@@ -39,12 +40,13 @@ int global_sensitivity(const Graph &g, int i, const std::list<Triangle> &triangl
 void apply_global_sensitivity(const Graph &g,
                               const PrivateCountingConfig &cfg,
                               std::vector<TriangleCount> &counts,
-                              const std::vector<std::list<Triangle> > &node2TriangleMap) {
+                              const std::vector<std::list<int>> &node_triangle_index_map,
+			      const std::vector<Triangle> &triangles) {
     const double unbiased_sens_mul = 1 + 2 * (std::exp(cfg.weight_eps) / std::pow(1 - std::exp(cfg.weight_eps), 2));
 
     for (int i = 0; i < counts.size(); ++i) {
-        std::list<Triangle> triangles = node2TriangleMap[i];
-        double sens = global_sensitivity(g, i, triangles);
+        std::list<int> triangles_index_list = node_triangle_index_map[i];
+        double sens = global_sensitivity(g, i, triangles_index_list, triangles);
         double biased_global_noise = sample_laplace(0, sens / cfg.count_eps);
         double unbiased_global_noise = sample_laplace(0, sens * unbiased_sens_mul / cfg.count_eps);
 

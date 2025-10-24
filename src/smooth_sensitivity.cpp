@@ -7,12 +7,14 @@
 std::pair<std::vector<double>, double> compute_partial_triangle_weights(Graph &g,
                                                                         const Edge &e,
                                                                         const int lamba,
-                                                                        std::list<Triangle> &triangles,
-                                                                        bool inc) {
+									const std::list<int> &triangle_index_list,
+                                                                        const std::vector<Triangle> &triangles,
+									bool inc) {
     int w_e = Triangle::get_edge_weight(g, e);
     std::vector<double> partial_triangle_weights;
-
-    for (Triangle &t: triangles) {
+        
+    for (int t_id : triangle_index_list) {
+	auto t = triangles[t_id];
         if (!t.contains_edge(g, e))
             continue;
 
@@ -213,12 +215,14 @@ std::vector<double> build_targets(const std::vector<double> &centers, double tar
 
 double fixed_edge_sensitivity(Graph &g,
                               Edge e,
-                              const int lambda,
-                              std::list<Triangle> &triangles, double beta,
+                              const int lambda, 
+			      const std::list<int> &triangle_index_list,
+			      const std::vector<Triangle> &triangles,
+			      double beta,
                               bool inc) {
     double opt = 0;
 
-    auto [partial_triangle_weights, target] = compute_partial_triangle_weights(g, e, lambda, triangles, inc);
+    auto [partial_triangle_weights, target] = compute_partial_triangle_weights(g, e, lambda, triangle_index_list, triangles, inc);
 
     if (partial_triangle_weights.empty()) {
         return -1;
@@ -255,7 +259,7 @@ double fixed_edge_sensitivity(Graph &g,
     return opt;
 }
 
-double smooth_sensitivity(Graph &g, Node v, const int lambda, std::list<Triangle> &triangles, double beta) {
+double smooth_sensitivity(Graph &g, Node v, const int lambda, const std::list<int> &triangles_index_list, const std::vector<Triangle> &triangles, double beta) {
     double sens = 0;
 
     #pragma omp parallel for reduction(max:sens)
@@ -264,8 +268,8 @@ double smooth_sensitivity(Graph &g, Node v, const int lambda, std::list<Triangle
         Node u = boost::adjacent_vertices(v, g).first[i];
         Edge e = boost::edge(u, v, g).first;
 
-        double sens_inc = fixed_edge_sensitivity(g, e, lambda, triangles, beta, true);
-        double sens_dec = fixed_edge_sensitivity(g, e, lambda, triangles, beta, false);
+        double sens_inc = fixed_edge_sensitivity(g, e, lambda, triangles_index_list, triangles, beta, true);
+        double sens_dec = fixed_edge_sensitivity(g, e, lambda, triangles_index_list, triangles, beta, false);
 
         // std::cout << "Edge " << e << ", sens_inc: " << sens_inc << ", sens_dec: " << sens_dec << std::endl;
 
@@ -279,7 +283,8 @@ double smooth_sensitivity(Graph &g, Node v, const int lambda, std::list<Triangle
 void apply_smooth_sensitivity(Graph &g,
                               const PrivateCountingConfig &cfg,
                               std::vector<TriangleCount> &counts,
-                              std::vector<std::list<Triangle> > &node_triangle_map) {
+                              std::vector<std::list<int>> &node_triangle_index_map,
+			      const std::vector<Triangle> &triangles) {
     const double beta = cfg.count_eps / (2 * (cfg.gamma - 1));
     const double p = std::exp(-cfg.weight_eps);
     const double unbiased_sens_mult = 1 + 2 * (p / std::pow(1 - p, 2));
@@ -288,13 +293,13 @@ void apply_smooth_sensitivity(Graph &g,
 
     #pragma omp parallel for
     for (int i = 0; i < counts.size(); i++) {
-        auto &triangles = node_triangle_map[i];
+        auto &triangle_index_list = node_triangle_index_map[i];
 
-        if (triangles.empty()) {
+        if (triangle_index_list.empty()) {
             continue;
         }
 
-        double sens = smooth_sensitivity(g, i, cfg.lambda, triangles, beta);
+        double sens = smooth_sensitivity(g, i, cfg.lambda, triangle_index_list, triangles, beta);
 
         counts[i].unbiased += smooth_sens_mult / cfg.count_eps * unbiased_sens_mult * sens * rv.sample();
         counts[i].biased += smooth_sens_mult / cfg.count_eps * sens * rv.sample();
