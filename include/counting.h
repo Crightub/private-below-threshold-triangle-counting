@@ -7,7 +7,8 @@
 using nlohmann::json;
 
 struct PrivateCountingResult {
-    int opt;
+    long opt;
+    long naive;
     double global_unbiased;
     double global_biased;
     double smooth_unbiased;
@@ -20,7 +21,8 @@ inline void to_json(json &j, const PrivateCountingResult &res) {
         {"global_unbiased", res.global_unbiased},
         {"global_biased", res.global_biased},
         {"smooth_unbiased", res.smooth_unbiased},
-        {"smooth_biased", res.smooth_biased}
+        {"smooth_biased", res.smooth_biased},
+        {"naive", res.naive}
     };
 }
 
@@ -28,6 +30,7 @@ struct PrivateCountingConfig {
     double weight_eps;
     double count_eps;
     int lambda;
+    int gamma;
     bool use_load_balancing;
     bool use_smooth_sensitivity;
 };

@@ -13,7 +13,8 @@ enum class Param {
     WeightStd,
     WeightEps,
     CountEps,
-    Lambda
+    Lambda,
+    Gamma
 };
 
 inline std::string to_string(Param p) {
@@ -32,6 +33,8 @@ inline std::string to_string(Param p) {
             return "count_eps";
         case Param::Lambda:
             return "lambda";
+        case Param::Gamma:
+            return "gamma";
         default:
             return "unknown";
     }
@@ -44,11 +47,16 @@ const std::unordered_map<std::string, Param> stringToParam = {
     {"weight_std", Param::WeightStd},
     {"weight_eps", Param::WeightEps},
     {"count_eps", Param::CountEps},
-    {"lambda", Param::Lambda}
+    {"lambda", Param::Lambda},
+    {"gamma", Param::Gamma}
 };
 
 struct Stat {
-    int opt = 0;
+    long opt = 0;
+
+    double naive = 0;
+    double naive_l2 = 0;
+
     double global_unbiased = 0;
     double global_biased = 0;
     double smooth_unbiased = 0;
@@ -63,41 +71,30 @@ struct Stat {
 
     std::vector<PrivateCountingResult> results;
 
-    void update(const PrivateCountingResult &res) {
-        opt += res.opt;
-        global_unbiased += res.global_unbiased;
-        global_biased += res.global_biased;
-        smooth_unbiased += res.smooth_unbiased;
-        smooth_biased += res.smooth_biased;
-
-        global_unbiased_l2 += (res.global_unbiased - res.opt) * (res.global_unbiased - res.opt);
-        global_biased_l2 += (res.global_biased - res.opt) * (res.global_biased - res.opt);
-        smooth_unbiased_l2 += (res.smooth_unbiased - res.opt) * (res.smooth_unbiased - res.opt);
-        smooth_biased_l2 += (res.smooth_biased - res.opt) * (res.smooth_biased - res.opt);
-
-        results.push_back(res);
-
-        n++;
+    Stat() = default;
+    explicit Stat(int _n) : n(_n) {
     }
 
-    void normalize() {
-        if (n == 0)
-            return;
-        opt /= n;
-        global_unbiased /= n;
-        global_biased /= n;
-        smooth_unbiased /= n;
-        smooth_biased /= n;
+    void update(const PrivateCountingResult &res) {
+        opt = res.opt;
+        naive += 1.0 / n * res.naive;
+        global_unbiased += 1.0 / n * res.global_unbiased;
+        global_biased += 1.0 / n * res.global_biased;
+        smooth_unbiased += 1.0 / n * res.smooth_unbiased;
+        smooth_biased += 1.0 / n * res.smooth_biased;
 
-        global_unbiased_l2 /= n;
-        global_biased_l2 /= n;
-        smooth_unbiased_l2 /= n;
-        smooth_biased_l2 /= n;
+        naive_l2 += 1.0 / n* (res.naive - res.opt) * (res.naive - res.opt);
+        global_unbiased_l2 += 1.0 / n * (res.global_unbiased - res.opt) * (res.global_unbiased - res.opt);
+        global_biased_l2 += 1.0 / n * (res.global_biased - res.opt) * (res.global_biased - res.opt);
+        smooth_unbiased_l2 += 1.0 / n * (res.smooth_unbiased - res.opt) * (res.smooth_unbiased - res.opt);
+        smooth_biased_l2 += 1.0 / n * (res.smooth_biased - res.opt) * (res.smooth_biased - res.opt);
+
+        results.push_back(res);
     }
 };
 
 
-struct SnapBenchmarkConfig {
+struct BenchmarkConfig {
     std::string graph_name;
     int instances_per_iter;
     int iterations_count;
@@ -112,7 +109,7 @@ struct SnapBenchmarkConfig {
     int lambda;
 };
 
-inline void print_benchmark_config(const SnapBenchmarkConfig &cfg) {
+inline void print_benchmark_config(const BenchmarkConfig &cfg) {
     std::cout << "Benchmark Config\n------------------\n"
             << "Graph: " << cfg.graph_name << std::endl
             << "Flexible Parameter: " << to_string(cfg.param) << std::endl
@@ -126,12 +123,12 @@ inline void print_benchmark_config(const SnapBenchmarkConfig &cfg) {
 }
 
 struct Benchmark {
-    SnapBenchmarkConfig cfg;
+    BenchmarkConfig cfg;
     std::map<double, Stat> results_load_balance;
     std::map<double, Stat> results_no_load_balance;
 };
 
-inline void to_json(json &j, const SnapBenchmarkConfig &cfg) {
+inline void to_json(json &j, const BenchmarkConfig &cfg) {
     j = {
         {"graph_name", cfg.graph_name},
         {"parameter", to_string(cfg.param)},
@@ -155,11 +152,13 @@ inline void to_json(json &j, const Stat &stat) {
         {"global_biased_l2", stat.global_biased_l2},
         {"smooth_unbiased_l2", stat.smooth_unbiased_l2},
         {"smooth_biased_l2", stat.smooth_biased_l2},
+        {"naive", stat.naive},
+        {"naive_l2", stat.naive_l2},
         {"results", stat.results}
     };
 }
 
-inline SnapBenchmarkConfig parse_snap_benchmark_config(int argc, char *argv[]) {
+inline BenchmarkConfig parse_benchmark_config(int argc, char *argv[]) {
     if (argc != 10 && argc != 6) {
         std::cerr << "Single Iteration Benchmark: " << argv[0] <<
                 " <graph_name> <instances> <weight_eps> <count_eps> <lambda>" << std::endl
@@ -170,7 +169,7 @@ inline SnapBenchmarkConfig parse_snap_benchmark_config(int argc, char *argv[]) {
     }
 
     if (argc == 10) {
-        SnapBenchmarkConfig settings{};
+        BenchmarkConfig settings{};
 
         settings.graph_name = argv[1];
         settings.instances_per_iter = std::atoi(argv[2]);
@@ -181,12 +180,11 @@ inline SnapBenchmarkConfig parse_snap_benchmark_config(int argc, char *argv[]) {
         settings.weight_eps = std::atof(argv[7]);
         settings.count_eps = std::atof(argv[8]);
         settings.lambda = std::atoi(argv[9]);
-
         return settings;
     }
 
 
-    SnapBenchmarkConfig settings{};
+    BenchmarkConfig settings{};
 
     settings.graph_name = argv[1];
     settings.instances_per_iter = std::atoi(argv[2]);
@@ -214,6 +212,8 @@ inline void set_param(PrivateCountingConfig &cfg, const Param param, double valu
         case Param::Lambda:
             cfg.lambda = value;
             break;
+        case Param::Gamma:
+            cfg.gamma = value;
         default:
             break;
     }
@@ -221,7 +221,6 @@ inline void set_param(PrivateCountingConfig &cfg, const Param param, double valu
 
 
 inline void wrap_up_stats(std::map<double, Stat> &results, double value, Stat avg) {
-    avg.normalize();
     results[value] = avg;
 }
 
@@ -244,7 +243,7 @@ inline void save_benchmark_to_json(const Benchmark &bench, const std::string &fi
 }
 
 
-inline std::string generate_filename(const SnapBenchmarkConfig &cfg) {
+inline std::string generate_filename(const BenchmarkConfig &cfg) {
     auto now = std::chrono::system_clock::now();
     std::time_t t = std::chrono::system_clock::to_time_t(now);
     std::tm tm = *std::localtime(&t);

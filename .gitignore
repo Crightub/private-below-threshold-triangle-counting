@@ -4,9 +4,12 @@
 /benchmark
 /logs
 /json
-/data
 
 *.png
 *.dot
 
 /.vscode
+
+/data/bitcoinotc.csv
+/data/MItoMI-2013-11-03-complete.csv
+/data/MItoMI-2013-11-03-G-625.csv

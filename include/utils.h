@@ -53,7 +53,8 @@ inline bool is_same_edge(const Graph &g, Edge e1, Edge e2) {
 }
 
 struct TriangleCount {
-    int opt;
+    long naive;
+    long opt;
     double unbiased;
     double biased;
 };

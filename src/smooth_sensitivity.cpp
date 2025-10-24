@@ -280,11 +280,11 @@ void apply_smooth_sensitivity(Graph &g,
                               const PrivateCountingConfig &cfg,
                               std::vector<TriangleCount> &counts,
                               std::vector<std::list<Triangle> > &node_triangle_map) {
-    const int gamma = 4;
-    const double beta = cfg.count_eps / (2 * (gamma - 1));
+    const double beta = cfg.count_eps / (2 * (cfg.gamma - 1));
     const double p = std::exp(-cfg.weight_eps);
     const double unbiased_sens_mult = 1 + 2 * (p / std::pow(1 - p, 2));
-    auto rv = PolynomialTailRV(gamma);
+    const double smooth_sens_mult = 2*std::pow(cfg.gamma - 1, (cfg.gamma - 1) / cfg.gamma);
+    auto rv = PolynomialTailRV(cfg.gamma);
 
     #pragma omp parallel for
     for (int i = 0; i < counts.size(); i++) {
@@ -296,7 +296,7 @@ void apply_smooth_sensitivity(Graph &g,
 
         double sens = smooth_sensitivity(g, i, cfg.lambda, triangles, beta);
 
-        counts[i].unbiased += 2 * (gamma - 1) / cfg.count_eps * unbiased_sens_mult * sens * rv.sample();
-        counts[i].biased += 2 * (gamma - 1) / cfg.count_eps * sens * rv.sample();
+        counts[i].unbiased += smooth_sens_mult / cfg.count_eps * unbiased_sens_mult * sens * rv.sample();
+        counts[i].biased += smooth_sens_mult / cfg.count_eps * sens * rv.sample();
     }
 }

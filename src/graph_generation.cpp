@@ -40,8 +40,86 @@ Graph generate_graph(int num_vertices, double edge_probability, double weight_mu
 
     return g;
 }
+//
+// Graph load_snap_bitcoin_graph(const std::string &file_name) {
+//     Graph g;
+//
+//     std::ifstream file(file_name);
+//     if (!file.is_open()) {
+//         throw std::runtime_error("Could not open file " + file_name);
+//     }
+//
+//     std::string line;
+//
+//     std::map<std::pair<int, int>, int> edge_ratings;
+//
+//     while (std::getline(file, line)) {
+//         if (line.empty()) continue;
+//
+//         std::istringstream iss(line);
+//         std::string token;
+//
+//         int source, target, rating;
+//         double time;
+//
+//         std::getline(iss, token, ',');
+//         source = std::stoi(token);
+//         std::getline(iss, token, ',');
+//         target = std::stoi(token);
+//         std::getline(iss, token, ',');
+//         rating = std::stoi(token);
+//         std::getline(iss, token, ',');
+//         time = std::stod(token);
+//
+//         if (std::max(source, target) >= boost::num_vertices(g)) {
+//             while (boost::num_vertices(g) <= std::max(source, target)) {
+//                 boost::add_vertex(g);
+//             }
+//         }
+//
+//         auto key = std::make_pair(std::min(source, target), std::max(target, source));
+//
+//         if (edge_ratings.find(key) != edge_ratings.end()) {
+//             int reverse_rating = edge_ratings[key];
+//             int avg_rating = static_cast<int>(std::round((rating + reverse_rating) / 2.0));
+//
+//             auto e1 = boost::edge(std::max(source, target), std::min(target, source), g);
+//             if (e1.second) {
+//                 g[e1.first].weight = avg_rating;
+//                 g[e1.first].load = 0;
+//                 g[e1.first].noise = 0;
+//             }
+//         } else {
+//             edge_ratings[key] = rating;
+//
+//             auto e = boost::add_edge(std::max(source, target), std::min(target, source), g);
+//             if (e.second) {
+//                 g[e.first].weight = rating;
+//                 g[e.first].load = 0;
+//                 g[e.first].noise = 0;
+//             }
+//         }
+//     }
+//
+//     return g;
+// }
 
-Graph load_snap_bitcoin_graph(const std::string &file_name) {
+void ensure_vertices(Graph& g, int u, int v) {
+    while (boost::num_vertices(g) <= std::max(u, v)) {
+        boost::add_vertex(g);
+    }
+}
+
+void add_edge_with_weight(Graph& g, int u, int v, int weight) {
+    auto e = boost::add_edge(u, v, g);
+    if (e.second) {
+        g[e.first].weight = weight;
+        g[e.first].load = 0;
+        g[e.first].noise = 0;
+    }
+}
+
+Graph load_weighted_graph(const std::string& file_name) {
     Graph g;
 
     std::ifstream file(file_name);
@@ -50,194 +128,41 @@ Graph load_snap_bitcoin_graph(const std::string &file_name) {
     }
 
     std::string line;
-
-    std::map<std::pair<int, int>, int> edge_ratings;
-
     while (std::getline(file, line)) {
         if (line.empty()) continue;
 
         std::istringstream iss(line);
         std::string token;
+        int values[3];  // source, target, weight
 
-        int source, target, rating;
-        double time;
-
-        std::getline(iss, token, ',');
-        source = std::stoi(token);
-        std::getline(iss, token, ',');
-        target = std::stoi(token);
-        std::getline(iss, token, ',');
-        rating = std::stoi(token);
-        std::getline(iss, token, ',');
-        time = std::stod(token);
-
-        if (std::max(source, target) >= boost::num_vertices(g)) {
-            while (boost::num_vertices(g) <= std::max(source, target)) {
-                boost::add_vertex(g);
-            }
+        for (int i = 0; i < 2; ++i) {
+            std::getline(iss, token, ',');
+            values[i] = std::stoi(token);
         }
 
-        auto key = std::make_pair(std::min(source, target), std::max(target, source));
+        std::getline(iss, token, ',');
+        values[2] = std::stoi(token);
 
-        if (edge_ratings.find(key) != edge_ratings.end()) {
-            int reverse_rating = edge_ratings[key];
-            int avg_rating = static_cast<int>(std::round((rating + reverse_rating) / 2.0));
-
-            auto e1 = boost::edge(std::max(source, target), std::min(target, source), g);
-            if (e1.second) {
-                g[e1.first].weight = avg_rating;
-                g[e1.first].load = 0;
-                g[e1.first].noise = 0;
-            }
-        } else {
-            edge_ratings[key] = rating;
-
-            auto e = boost::add_edge(std::max(source, target), std::min(target, source), g);
-            if (e.second) {
-                g[e.first].weight = rating;
-                g[e.first].load = 0;
-                g[e.first].noise = 0;
-            }
-        }
+        ensure_vertices(g, values[0], values[1]);
+        add_edge_with_weight(g, values[0], values[1], values[2]);
     }
 
     return g;
 }
 
-
-Graph load_snap_epinions_graph(const std::string &file_name) {
-    Graph g;
-
-    std::ifstream file(file_name);
-    if (!file.is_open()) {
-        throw std::runtime_error("Could not open file " + file_name);
-    }
-
-    std::string line;
-
-    while (std::getline(file, line)) {
-        if (line.empty()) continue;
-
-        std::istringstream iss(line);
-        std::string token;
-
-        int source, target, rating;
-
-        std::getline(iss, token, '\t');
-        source = std::stoi(token);
-        std::getline(iss, token, '\t');
-        target = std::stoi(token);
-        std::getline(iss, token, '\t');
-        rating = std::stoi(token);
-
-        if (std::max(source, target) >= boost::num_vertices(g)) {
-            while (boost::num_vertices(g) <= std::max(source, target)) {
-                boost::add_vertex(g);
-            }
-        }
-        auto e = boost::add_edge(source, target, g);
-        if (e.second) {
-            g[e.first].weight = rating;
-            g[e.first].load = 0;
-            g[e.first].noise = 0;
-        }
-    }
-
-    return g;
+Graph load_traffic_graph() {
+    return load_weighted_graph("../data/istanbul_traffic.csv");
 }
 
 
-Graph load_traffic_graph(const std::string &file_name) {
-    Graph g;
-
-    std::ifstream file(file_name);
-    if (!file.is_open()) {
-        throw std::runtime_error("Could not open file " + file_name);
-    }
-
-    std::string line;
-
-    while (std::getline(file, line)) {
-        if (line.empty()) continue;
-
-        std::istringstream iss(line);
-        std::string token;
-
-        int source, target, vehicles;
-
-        std::getline(iss, token, ',');
-        source = std::stoi(token);
-        std::getline(iss, token, ',');
-        target = std::stoi(token);
-        std::getline(iss, token, ',');
-        vehicles = std::stoi(token);
-
-        if (std::max(source, target) >= boost::num_vertices(g)) {
-            while (boost::num_vertices(g) <= std::max(source, target)) {
-                boost::add_vertex(g);
-            }
-        }
-
-        auto e = boost::add_edge(source, target, g);
-        if (e.second) {
-            g[e.first].weight = vehicles;
-            g[e.first].load = 0;
-            g[e.first].noise = 0;
-        }
-    }
-
-    return g;
+Graph load_telecom_graph() {
+    return load_weighted_graph("../data/milan_telecom.csv");
 }
 
-
-Graph load_telecomm_graph(const std::string& file_name) {
-    Graph g;
-
-    std::ifstream file(file_name);
-    if (!file.is_open()) {
-        throw std::runtime_error("Could not open file " + file_name);
-    }
-
-    std::string line;
-
-    while (std::getline(file, line)) {
-        if (line.empty()) continue;
-
-        std::istringstream iss(line);
-        std::string token;
-
-        int source, target, calls;
-
-        std::getline(iss, token, ',');
-        source = std::stoi(token);
-        std::getline(iss, token, ',');
-        target = std::stoi(token);
-        std::getline(iss, token, ',');
-        calls = std::stoi(token);
-
-        if (std::max(source, target) >= boost::num_vertices(g)) {
-            while (boost::num_vertices(g) <= std::max(source, target)) {
-                boost::add_vertex(g);
-            }
-        }
-
-        auto e = boost::add_edge(source, target, g);
-        if (e.second) {
-            g[e.first].weight = calls;
-            g[e.first].load = 0;
-            g[e.first].noise = 0;
-        }
-    }
-
-    return g;
+Graph load_telecom_625_graph() {
+    return load_weighted_graph("../data/MItoMI-2013-11-03-G-625.csv");
 }
 
-Graph load_snap_wikipedia_graph(const std::string &file_name) {
-    // TODO: Implement
-    return Graph(0);
-}
-
-Graph load_snap_slashdot_graph(const std::string &file_name) {
-    // TODO: Implement
-    return Graph(0);
+Graph load_telecom_400_graph() {
+    return load_weighted_graph("../data/MItoMI-2013-11-03-G-400.csv");
 }
