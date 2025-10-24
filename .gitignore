@@ -4,6 +4,8 @@
 /benchmark
 /logs
 /json
+/external
+
 CMakeList.txt
 *.png
 *.dot
