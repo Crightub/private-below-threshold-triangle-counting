@@ -81,8 +81,8 @@ public:
         return {noise_e1, w_e1, w_e2, w_e3};
     }
 
-    std::tuple<int, int, int> get_triangle_noise(Graph &g) {
-        return {get_edge_noise(g, edges[0]), get_edge_noise(g, edges[1]), get_edge_noise(g, edges[2])};
+    std::tuple<int, int, int> get_triangle_triv_noise(Graph &g) {
+        return {get_edge_triv_noise(g, edges[0]), get_edge_triv_noise(g, edges[1]), get_edge_triv_noise(g, edges[2])};
     }
 
 
@@ -102,6 +102,18 @@ public:
         }
 
         return get(weight_map, x);
+    }
+
+    static int get_edge_triv_noise(Graph &g, const Edge &e) {
+        auto noise_map = get(&edge_info::triv_noise, g);
+
+        auto [x, exists] = boost::edge(boost::source(e, g), boost::target(e, g), g);
+        if (!exists) {
+            std::cerr << "ERROR: edge descriptor invalid!" << std::endl;
+            return 0;
+        }
+
+        return get(noise_map, x);
     }
 
     static int get_edge_noise(Graph &g, const Edge &e) {

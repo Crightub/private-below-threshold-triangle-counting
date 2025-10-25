@@ -14,6 +14,7 @@
 struct edge_info {
     int weight = 0;
     int noise = 0;
+    int triv_noise = 0;
     int load = 0;
     int involved_triangles = 0;
 };

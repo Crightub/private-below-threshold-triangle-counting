@@ -77,7 +77,7 @@ Benchmark run_instance_benchmark(BenchmarkConfig cfg) {
         auto avg_no_load_balance = Stat(cfg.instances_per_iter);
 
         for (int j = 0; j < cfg.instances_per_iter; ++j) {
-            add_discrete_laplace_noise(g_load_balance, cfg.weight_eps);
+            add_discrete_laplace_noise(g_load_balance, cfg.weight_eps, cfg.count_eps);
             std::cout << "Iteration: " << j << std::endl;
             std::cout << "Compute load balanced result..." << std::endl;
             PrivateCountingResult res_load_balance = private_counting(g_load_balance, load_balancing_base_cfg,
@@ -86,7 +86,7 @@ Benchmark run_instance_benchmark(BenchmarkConfig cfg) {
 
             if (cfg.compare_load_balancing) {
                 std::cout << "Compute lowest index priority result..." << std::endl;
-                add_discrete_laplace_noise(g_no_load_balance, cfg.weight_eps);
+                add_discrete_laplace_noise(g_no_load_balance, cfg.weight_eps, cfg.count_eps);
 
                 PrivateCountingResult res_no_load_balance = private_counting(
                     g_no_load_balance, no_load_balancing_base_cfg, &triangles_no_load_balance);
@@ -144,7 +144,7 @@ Benchmark run_param_benchmark(BenchmarkConfig cfg) {
 
         for (int j = 0; j < cfg.instances_per_iter; ++j) {
             std::cout << to_string(cfg.param) << ": " << value << ", Iteration: " << j << std::endl;
-            add_discrete_laplace_noise(g_load_balance, cfg.weight_eps);
+            add_discrete_laplace_noise(g_load_balance, cfg.weight_eps, cfg.count_eps);
 
             std::cout << "Compute load balanced result..." << std::endl;
             PrivateCountingResult res_load_balance = private_counting(g_load_balance,
@@ -154,7 +154,7 @@ Benchmark run_param_benchmark(BenchmarkConfig cfg) {
 
             if (cfg.compare_load_balancing) {
                 std::cout << "Compute lowest index priority result..." << std::endl;
-                add_discrete_laplace_noise(g_no_load_balance, cfg.weight_eps);
+                add_discrete_laplace_noise(g_no_load_balance, cfg.weight_eps, cfg.count_eps);
                 PrivateCountingResult res_no_load_balance = private_counting(
                     g_no_load_balance,
                     no_load_balancing_base_cfg,

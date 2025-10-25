@@ -33,12 +33,12 @@ void count_local_negative_triangles(Graph &g,
         }
 
         auto [noise_e1, w_e1, w_e2, w_e3] = t.get_triangle_weights(g);
-        auto [noise_1, noise_2, noise_3] = t.get_triangle_noise(g);
+        auto [triv_noise_1, triv_noise_2, triv_noise_3] = t.get_triangle_triv_noise(g);
 
         int node = t.source_node;
 
-        TriangleCount &lc = local_counts[tid][node]; // default-constructs only when needed
-        lc.naive    += biased_estimator(w_e1 + noise_1, w_e2 + noise_2, w_e3 + noise_3, base_cfg.lambda);
+        TriangleCount &lc = local_counts[tid][node];
+        lc.naive    += biased_estimator(w_e1 + triv_noise_1, w_e2 + triv_noise_2, w_e3 + triv_noise_3, base_cfg.lambda);
         lc.opt      += biased_estimator(w_e1, w_e2, w_e3, base_cfg.lambda);
         lc.unbiased += unbiased_estimator(noise_e1 + w_e1 + w_e2 + w_e3, p, base_cfg.lambda);
         lc.biased   += biased_estimator(noise_e1 + w_e1, w_e2, w_e3, base_cfg.lambda);

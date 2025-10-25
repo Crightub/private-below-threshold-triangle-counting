@@ -23,23 +23,20 @@ void assign_gaussian_weights(Graph &g, const double mu, const double std) {
     }
 }
 
-void add_discrete_laplace_noise(Graph &g, const double weight_eps) {
+void add_discrete_laplace_noise(Graph &g, const double weight_eps, const double count_eps) {
     double p = std::exp(-weight_eps);
+
+    double triv_p = std::exp(-(weight_eps + count_eps));
 
     for (auto [ei, ei_end] = boost::edges(g); ei != ei_end; ++ei) {
         int noise = sample_discrete_laplace(p);
         put(&edge_info::noise, g, *ei, noise);
+
+        int triv_noise = sample_discrete_laplace(triv_p);
+        put(&edge_info::triv_noise, g, *ei, triv_noise);
     }
 }
 
-Graph generate_graph(int num_vertices, double edge_probability, double weight_mu, double weight_std,
-                     double weight_eps) {
-    Graph g = generate_er_graph(num_vertices, edge_probability);
-    assign_gaussian_weights(g, weight_mu, weight_std);
-    add_discrete_laplace_noise(g, weight_eps);
-
-    return g;
-}
 //
 // Graph load_snap_bitcoin_graph(const std::string &file_name) {
 //     Graph g;
