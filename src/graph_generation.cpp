@@ -166,3 +166,7 @@ Graph load_telecom_625_graph() {
 Graph load_telecom_400_graph() {
     return load_weighted_graph("../data/MItoMI-2013-11-03-G-400.csv");
 }
+
+Graph load_telecom_278_graph() {
+    return load_weighted_graph("../data/MItoMI-2013-11-03-G-278.csv");
+}

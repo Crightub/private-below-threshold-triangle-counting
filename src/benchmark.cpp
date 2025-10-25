@@ -15,6 +15,8 @@ Graph load_graph(const BenchmarkConfig &cfg) {
         return load_telecom_625_graph();
     } else if (cfg.graph_name == "telecom-400") {
         return load_telecom_400_graph();
+    } else if (cfg.graph_name == "telecom-278") {
+        return load_telecom_278_graph();
     }
     return Graph(0);
 }
@@ -169,7 +171,6 @@ Benchmark run_param_benchmark(BenchmarkConfig cfg) {
 }
 
 int main(int argc, char *argv[]) {
-	std::cout << "TEST" << std::endl;
     BenchmarkConfig cfg = parse_benchmark_config(argc, argv);
     cfg.compare_load_balancing = true;
     std::string base_file_name = generate_filename(cfg);

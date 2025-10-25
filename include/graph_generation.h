@@ -17,3 +17,5 @@ Graph load_telecom_graph();
 Graph load_telecom_625_graph();
 
 Graph load_telecom_400_graph();
+
+Graph load_telecom_278_graph();
