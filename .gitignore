@@ -5,7 +5,7 @@
 /logs
 /json
 /external
-
+/jobs
 CMakeList.txt
 *.png
 *.dot
