@@ -255,6 +255,7 @@ inline std::string generate_filename(const BenchmarkConfig &cfg) {
     filename << "bench_"
             << cfg.graph_name << "_"
             << to_string(cfg.param) << "_"
+            << cfg.start_value << "_"
             << cfg.iterations_count << "_"
             << cfg.step_size << "_"
             << cfg.weight_eps << "_"
