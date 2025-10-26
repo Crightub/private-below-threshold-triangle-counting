@@ -1,0 +1,128 @@
+{
+    "config": {
+        "count_eps": 1.0,
+        "graph_name": "telecom-278",
+        "instances_per_iter": 5,
+        "iterations_count": 1,
+        "lambda": 62,
+        "parameter": "lambda",
+        "step_size": 0.0,
+        "weight_eps": 1.0
+    },
+    "results_map": {
+        "load_balance": {
+            "62.000000": {
+                "global_biased": 3538442.6211700263,
+                "global_biased_l2": 16703283.23605628,
+                "global_unbiased": 3542191.2198046716,
+                "global_unbiased_l2": 109004726.81666291,
+                "naive": 3538536.1999999997,
+                "naive_l2": 22839.600000000002,
+                "opt": 3538401,
+                "results": [
+                    {
+                        "global_biased": 3531015.788680622,
+                        "global_unbiased": 3558168.842514463,
+                        "naive": 3538474,
+                        "opt": 3538401,
+                        "smooth_biased": 3538447.222287555,
+                        "smooth_unbiased": 3537956.618344002
+                    },
+                    {
+                        "global_biased": 3542651.2003480857,
+                        "global_unbiased": 3547989.206847028,
+                        "naive": 3538650,
+                        "opt": 3538401,
+                        "smooth_biased": 3538422.2772481856,
+                        "smooth_unbiased": 3538573.9925067117
+                    },
+                    {
+                        "global_biased": 3537994.376197537,
+                        "global_unbiased": 3531077.430697411,
+                        "naive": 3538565,
+                        "opt": 3538401,
+                        "smooth_biased": 3538328.430884694,
+                        "smooth_unbiased": 3537877.122988507
+                    },
+                    {
+                        "global_biased": 3538912.9237503344,
+                        "global_unbiased": 3535456.706263297,
+                        "naive": 3538465,
+                        "opt": 3538401,
+                        "smooth_biased": 3538914.6449045176,
+                        "smooth_unbiased": 3538030.002307182
+                    },
+                    {
+                        "global_biased": 3541638.816873552,
+                        "global_unbiased": 3538263.9127011565,
+                        "naive": 3538527,
+                        "opt": 3538401,
+                        "smooth_biased": 3538835.2830670113,
+                        "smooth_unbiased": 3538517.255200582
+                    }
+                ],
+                "smooth_biased": 3538589.5716783935,
+                "smooth_biased_l2": 92057.67357660696,
+                "smooth_unbiased": 3538190.9982693973,
+                "smooth_unbiased_l2": 130600.62929504004
+            }
+        },
+        "no_load_balance": {
+            "62.000000": {
+                "global_biased": 3538567.8627817547,
+                "global_biased_l2": 7715455.489383069,
+                "global_unbiased": 3529345.6558091636,
+                "global_unbiased_l2": 240674778.1347675,
+                "naive": 3538472.4,
+                "naive_l2": 6852.2,
+                "opt": 3538401,
+                "results": [
+                    {
+                        "global_biased": 3542056.00024319,
+                        "global_unbiased": 3517508.4732788773,
+                        "naive": 3538472,
+                        "opt": 3538401,
+                        "smooth_biased": 3538555.9915462,
+                        "smooth_unbiased": 3538102.7380901626
+                    },
+                    {
+                        "global_biased": 3534825.0016142437,
+                        "global_unbiased": 3544135.3222983438,
+                        "naive": 3538444,
+                        "opt": 3538401,
+                        "smooth_biased": 3538471.7731567337,
+                        "smooth_unbiased": 3538049.7252520407
+                    },
+                    {
+                        "global_biased": 3535807.0083574182,
+                        "global_unbiased": 3531314.45473788,
+                        "naive": 3538544,
+                        "opt": 3538401,
+                        "smooth_biased": 3538836.5091222147,
+                        "smooth_unbiased": 3537996.8710603663
+                    },
+                    {
+                        "global_biased": 3540291.030531397,
+                        "global_unbiased": 3512418.8678219086,
+                        "naive": 3538420,
+                        "opt": 3538401,
+                        "smooth_biased": 3538461.407869349,
+                        "smooth_unbiased": 3538235.5289952597
+                    },
+                    {
+                        "global_biased": 3539860.273162525,
+                        "global_unbiased": 3541351.1609088043,
+                        "naive": 3538482,
+                        "opt": 3538401,
+                        "smooth_biased": 3538353.816422534,
+                        "smooth_unbiased": 3537883.744417539
+                    }
+                ],
+                "smooth_biased": 3538535.899623406,
+                "smooth_biased_l2": 44914.963060309965,
+                "smooth_unbiased": 3538053.7215630733,
+                "smooth_unbiased_l2": 134121.66125203832
+            }
+        }
+    }
+}
