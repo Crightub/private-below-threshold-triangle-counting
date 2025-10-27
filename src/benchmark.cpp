@@ -7,16 +7,10 @@
 
 
 Graph load_graph(const BenchmarkConfig &cfg) {
-    if (cfg.graph_name == "traffic") {
-        return load_traffic_graph();
-    } else if (cfg.graph_name == "telecom") {
-        return load_telecom_graph();
-    } else if (cfg.graph_name == "telecom-625") {
-        return load_telecom_625_graph();
-    } else if (cfg.graph_name == "telecom-400") {
-        return load_telecom_400_graph();
-    } else if (cfg.graph_name == "telecom-278") {
+    if (cfg.graph_name == "telecom-278") {
         return load_telecom_278_graph();
+    } else if (cfg.graph_name == "gmwcs") {
+        return load_gmwcs_graph();
     }
     return Graph(0);
 }

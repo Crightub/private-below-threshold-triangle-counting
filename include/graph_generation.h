@@ -8,12 +8,6 @@ void add_discrete_laplace_noise(Graph &g, const double weight_eps, const double 
 
 Graph generate_graph(int num_vertices, double edge_probability, double weight_mu, double weight_std, double weight_eps);
 
-Graph load_traffic_graph();
-
-Graph load_telecom_graph();
-
-Graph load_telecom_625_graph();
-
-Graph load_telecom_400_graph();
-
 Graph load_telecom_278_graph();
+
+Graph load_gmwcs_graph();

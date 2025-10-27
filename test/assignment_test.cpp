@@ -26,10 +26,6 @@ BOOST_AUTO_TEST_CASE(find_triangles_2) {
     auto triangles = find_triangles(g);
 
     BOOST_CHECK_EQUAL(triangles.size(), 20000);
-
-    // for (auto e: boost::make_iterator_range(edges(g))) {
-    //     BOOST_CHECK_EQUAL(g[e].involved_triangles, 1);
-    // }
 }
 
 BOOST_AUTO_TEST_CASE(find_triangles_3) {
