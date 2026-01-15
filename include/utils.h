@@ -79,7 +79,7 @@ inline long long compute_c4_instances(const Graph &g) {
 }
 
 // <-- Print functions -->
-inline void print_vector(const std::vector<double> &v) {
+inline std::string vector_string(const std::vector<int> &v) {
     std::ostringstream oss;
     oss << "[";
     for (int j = 0; j < v.size(); j++) {
@@ -89,7 +89,11 @@ inline void print_vector(const std::vector<double> &v) {
         }
     }
     oss << "]";
-    std::cout << oss.str() << std::endl;
+    return oss.str();
+}
+
+inline void print_vector(const std::vector<int> &v) {
+    std::cout << vector_string(v) << std::endl;
 }
 
 

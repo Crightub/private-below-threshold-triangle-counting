@@ -9,10 +9,11 @@
 Graph load_graph(const BenchmarkConfig &cfg) {
     if (cfg.graph_name == "telecom-278") {
         return load_telecom_278_graph();
-    } else if (cfg.graph_name == "gmwcs") {
+    }
+    if (cfg.graph_name == "gmwcs") {
         return load_gmwcs_graph();
     }
-    return Graph(0);
+    return {0};
 }
 
 void reset_loads(Graph &g) {

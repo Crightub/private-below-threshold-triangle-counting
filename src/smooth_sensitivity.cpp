@@ -1,40 +1,10 @@
 #include "counting.h"
 #include "distribution.h"
 #include <boost/log/utility/setup/console.hpp>
+
+#include "smooth_sens_utils.h"
 #include "treap.h"
 
-
-std::pair<std::vector<double>, double> compute_partial_triangle_weights(Graph &g,
-                                                                        const Edge &e,
-                                                                        const int lamba,
-									const std::list<int> &triangle_index_list,
-                                                                        const std::vector<Triangle> &triangles,
-									bool inc) {
-    int w_e = Triangle::get_edge_weight(g, e);
-    std::vector<double> partial_triangle_weights;
-        
-    for (int t_id : triangle_index_list) {
-	auto t = triangles[t_id];
-        if (!t.contains_edge(g, e))
-            continue;
-
-        auto [noise_e1, w_e1, w_e2, w_e3] = t.get_triangle_weights(g);
-
-        double partial_triangle_weight = noise_e1 + w_e1 + w_e2 + w_e3 - w_e;
-        partial_triangle_weights.push_back(partial_triangle_weight);
-    }
-
-    std::sort(partial_triangle_weights.begin(), partial_triangle_weights.end());
-
-    double target;
-    if (inc) {
-        target = lamba - 1 - w_e;
-    } else {
-        target = lamba - w_e;
-    }
-
-    return {partial_triangle_weights, target};
-}
 
 std::pair<double, int> handle_boundary_case(TreapNode *left,
                                             TreapNode *right,
@@ -215,14 +185,16 @@ std::vector<double> build_targets(const std::vector<double> &centers, double tar
 
 double fixed_edge_sensitivity(Graph &g,
                               Edge e,
-                              const int lambda, 
-			      const std::list<int> &triangle_index_list,
-			      const std::vector<Triangle> &triangles,
-			      double beta,
+                              const int lambda,
+                              const std::list<int> &triangle_index_list,
+                              const std::vector<Triangle> &triangles,
+                              double beta,
                               bool inc) {
     double opt = 0;
 
-    auto [partial_triangle_weights, target] = compute_partial_triangle_weights(g, e, lambda, triangle_index_list, triangles, inc);
+    std::vector<double> partial_triangle_weights = setup_partial_triangle_weights(
+        g, e, triangle_index_list, triangles);
+    double target = setup_target(g, e, lambda, inc);
 
     if (partial_triangle_weights.empty()) {
         return -1;
@@ -259,10 +231,11 @@ double fixed_edge_sensitivity(Graph &g,
     return opt;
 }
 
-double smooth_sensitivity(Graph &g, Node v, const int lambda, const std::list<int> &triangles_index_list, const std::vector<Triangle> &triangles, double beta) {
+double smooth_sensitivity(Graph &g, Node v, const int lambda, const std::list<int> &triangles_index_list,
+                          const std::vector<Triangle> &triangles, double beta) {
     double sens = 0;
 
-    #pragma omp parallel for reduction(max:sens)
+#pragma omp parallel for reduction(max:sens)
     for (int i = 0; i < boost::degree(v, g); ++i) {
         // Fix the edge e = (v,u) and compute the maximum smooth sensitivity achieved by increasing / decreasing e
         Node u = boost::adjacent_vertices(v, g).first[i];
@@ -283,15 +256,15 @@ double smooth_sensitivity(Graph &g, Node v, const int lambda, const std::list<in
 void apply_smooth_sensitivity(Graph &g,
                               const PrivateCountingConfig &cfg,
                               std::vector<TriangleCount> &counts,
-                              std::vector<std::list<int>> &node_triangle_index_map,
-			      const std::vector<Triangle> &triangles) {
+                              std::vector<std::list<int> > &node_triangle_index_map,
+                              const std::vector<Triangle> &triangles) {
     const double beta = cfg.count_eps / (2 * (cfg.gamma - 1));
     const double p = std::exp(-cfg.weight_eps);
     const double unbiased_sens_mult = 1 + 2 * (p / std::pow(1 - p, 2));
-    const double smooth_sens_mult = 2*std::pow(cfg.gamma - 1, (cfg.gamma - 1) / cfg.gamma);
+    const double smooth_sens_mult = 2 * std::pow(cfg.gamma - 1, (cfg.gamma - 1) / cfg.gamma);
     auto rv = PolynomialTailRV(cfg.gamma);
 
-    #pragma omp parallel for
+#pragma omp parallel for
     for (int i = 0; i < counts.size(); i++) {
         auto &triangle_index_list = node_triangle_index_map[i];
 
