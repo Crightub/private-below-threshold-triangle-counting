@@ -24,7 +24,6 @@ void reset_loads(Graph &g) {
     }
 }
 
-
 Benchmark run_instance_benchmark(BenchmarkConfig cfg) {
     Graph base_g = load_graph(cfg);
 
@@ -79,14 +78,14 @@ Benchmark run_instance_benchmark(BenchmarkConfig cfg) {
                                                                       &triangles_load_balance);
             avg_load_balance.update(res_load_balance);
 
-            if (cfg.compare_load_balancing) {
-                std::cout << "Compute lowest index priority result..." << std::endl;
-                add_discrete_laplace_noise(g_no_load_balance, cfg.weight_eps, cfg.count_eps);
-
-                PrivateCountingResult res_no_load_balance = private_counting(
-                    g_no_load_balance, no_load_balancing_base_cfg, &triangles_no_load_balance);
-                avg_no_load_balance.update(res_no_load_balance);
-            }
+            // if (cfg.compare_load_balancing) {
+            //     std::cout << "Compute lowest index priority result..." << std::endl;
+            //     add_discrete_laplace_noise(g_no_load_balance, cfg.weight_eps, cfg.count_eps);
+            //
+            //     PrivateCountingResult res_no_load_balance = private_counting(
+            //         g_no_load_balance, no_load_balancing_base_cfg, &triangles_no_load_balance);
+            //     avg_no_load_balance.update(res_no_load_balance);
+            // }
         }
 
         wrap_up_stats(results_load_balance, value, avg_load_balance);

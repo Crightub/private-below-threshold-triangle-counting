@@ -4,10 +4,11 @@
 #include <vector>
 #include "utils.h"
 
-SingleTargetDistance::SingleTargetDistance(std::vector<int> _p, int _t)
+SingleTargetDistance::SingleTargetDistance(const std::vector<int> &_p, int _t)
     : p(std::move(_p)), t(_t) {
     int n = p.size();
     pref.resize(n + 1, 0);
+
     for (int i = 0; i < n; ++i)
         pref[i + 1] = pref[i] + p[i];
 
@@ -16,7 +17,9 @@ SingleTargetDistance::SingleTargetDistance(std::vector<int> _p, int _t)
 }
 
 
-long long SingleTargetDistance::sum_k_closest_distances(int k, int l) {
+long long SingleTargetDistance::sum_k_closest_distances(int k) {
+    auto [_, l] = k_th_closest_distance(k);
+
     int r = k - l;
     long long sum = 0;
 
@@ -42,7 +45,6 @@ int SingleTargetDistance::right_size() const {
 int SingleTargetDistance::left_size() const {
     return std::min(j, static_cast<int>(p.size()));
 }
-
 
 std::pair<int, int> SingleTargetDistance::k_th_closest_distance(int k) {
     int lo = std::max(0, k - right_size());
@@ -77,20 +79,13 @@ std::pair<int, int> SingleTargetDistance::k_th_closest_distance(int k) {
         }
     }
 
-    int l = lo;
-    int left_dist = (l > 0) ? t - p[j - l] : -1;
-    int right_dist = (k - l > 0) ? p[j + (k - l) - 1] - t : -1;
-
-    if (l == 0) return {right_dist, 0};
-    if (k - l == 0) return {left_dist, k};
-
     return {opt_dis, opt_l};
 }
 
 void SingleTargetDistance::update_target(int new_t) {
     t = new_t;
 
-    while (p[j] < t && j < p.size()) {
+    while (j < p.size() && p[j] < t) {
         ++j;
     }
 
@@ -186,9 +181,6 @@ std::pair<int, int> DoubleTargetDistance::k_th_closest_distance(int k) {
 
         int n_dis = std::max(left_dist, right_dist);
 
-        std::cout << "m: " << m << " n_dis: " << n_dis << " left_dis = " << left_dist << " right_dis = "
-                << right_dist << std::endl;
-
         if (n_dis <= opt_dis) {
             opt_dis = n_dis;
             opt_l = m;
@@ -213,7 +205,8 @@ std::pair<int, int> DoubleTargetDistance::k_th_closest_distance(int k) {
 }
 
 
-long long DoubleTargetDistance::sum_k_closest_distances(int k, int l) {
+long long DoubleTargetDistance::sum_k_closest_distances(int k) {
+    auto [_, l] = k_th_closest_distance(k);
     long long sum = 0;
 
     // zero-distance

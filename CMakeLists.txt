@@ -3,12 +3,12 @@ cmake_minimum_required(VERSION 3.10...3.25)
 project(negative_triangle_counting)
 
 # Set C++ version
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_FLAGS_RELEASE "-O2")
 
 #Sanitizer options
-# option(ENABLE_SANITIZERS "Build with Address/Undefined sanitizers" ON)
+option(ENABLE_SANITIZERS "Build with Address/Undefined sanitizers" ON)
 
 if (ENABLE_SANITIZERS)
     message(STATUS "Sanitizers enabled")
@@ -40,17 +40,12 @@ add_executable(benchmark
         src/counting.cpp
         src/graph_generation.cpp
         src/utils.cpp
-        src/smooth_sensitivity.cpp
+        src/smooth_sens_biased.cpp
         src/global_sensitivity.cpp
         src/graph_statistics.cpp
-        src/smooth_sensitivity.cpp
-        src/smooth_sensitivity.cpp
-        src/smooth_sensitivity_unbiased.cpp
-        include/smooth_sensitivity_unbiased.h
+        src/smooth_sens_unbiased.cpp
         src/distance_retrieval.cpp
-        include/distance_retrieval.h
         src/smooth_sens_utils.cpp
-        include/smooth_sens_utils.h
 )
 
 target_link_libraries(benchmark
@@ -80,20 +75,36 @@ enable_testing()
 #        Boost::headers
 #)
 #
-#add_executable(sensitivity_test test/sensitivity_test.cpp src/counting.cpp src/graph_generation.cpp src/utils.cpp src/smooth_sensitivity.cpp src/global_sensitivity.cpp src/graph_statistics.cpp
-#        src/smooth_sensitivity.cpp
-#        src/smooth_sensitivity.cpp)
-#target_link_libraries(sensitivity_test
-#        Boost::headers
-#)
+add_executable(sensitivity_test
+        test/sensitivity_test.cpp
+        src/smooth_sens_biased.cpp
+        src/smooth_sens_utils.cpp
+        src/global_sensitivity.cpp
+        src/distance_retrieval.cpp
+        src/graph_statistics.cpp
+        src/smooth_sens_unbiased.cpp
+        src/utils.cpp
+)
 
+target_link_libraries(sensitivity_test
+        Boost::headers
+)
+
+add_executable(smooth_sens_unb_test
+        test/smooth_sens_unb_test.cpp
+        src/smooth_sens_unbiased.cpp
+        src/smooth_sens_utils.cpp
+        src/distance_retrieval.cpp
+        src/utils.cpp
+        src/graph_statistics.cpp)
+
+target_link_libraries(smooth_sens_unb_test
+        Boost::headers
+)
 
 add_executable(distance_test
         test/distance_test.cpp
         src/distance_retrieval.cpp
-        test/smooth_sens_unb_test.cpp
-        test/smooth_sens_unb_test.h
-        test/graph_presets.h
 )
 
 target_link_libraries(distance_test
@@ -103,15 +114,18 @@ target_link_libraries(distance_test
 if (OpenMP_CXX_FOUND)
     #    target_link_libraries(treap_test OpenMP::OpenMP_CXX)
     #    target_link_libraries(assignment_test OpenMP::OpenMP_CXX)
-    #    target_link_libraries(sensitivity_test OpenMP::OpenMP_CXX)
+    target_link_libraries(sensitivity_test OpenMP::OpenMP_CXX)
     #    target_link_libraries(counting_test OpenMP::OpenMP_CXX)
     #    target_link_libraries(distribution_test OpenMP::OpenMP_CXX)
     target_link_libraries(benchmark OpenMP::OpenMP_CXX)
     target_link_libraries(distance_test OpenMP::OpenMP_CXX)
+    target_link_libraries(smooth_sens_unb_test OpenMP::OpenMP_CXX)
 endif ()
 
+add_test(NAME SmoothSensitivityTest COMMAND smooth_sens_unb_test)
+add_test(NAME DistanceTest COMMAND distance_test)
 #add_test(NAME TreapTest COMMAND treap_test)
-#add_test(NAME SensitivityTest COMMAND sensitivity_test)
+add_test(NAME SensitivityTest COMMAND sensitivity_test)
 #add_test(NAME AssignmentTest COMMAND assignment_test)
 #add_test(NAME CountingTest COMMAND counting_test)
 #add_test(NAME DistributionTest COMMAND distribution_test)

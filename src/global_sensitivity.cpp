@@ -8,7 +8,10 @@
 #include "utils.h"
 struct PrivateCountingConfig;
 
-int global_sensitivity(const Graph &g, int i, const std::list<int> &triangle_index_list, const std::vector<Triangle> &triangles) {
+int global_sensitivity(const Graph &g,
+                       int i,
+                       const std::list<int> &triangle_index_list,
+                       const std::vector<Triangle> &triangles) {
     int sens = 0;
 
     std::vector<Edge> incident_edges;
@@ -16,19 +19,19 @@ int global_sensitivity(const Graph &g, int i, const std::list<int> &triangle_ind
         incident_edges.push_back(*ei);
     }
 
-    #pragma omp parallel for reduction(max:sens)
+    // #pragma omp parallel for reduction(max:sens)
     for (size_t i = 0; i < incident_edges.size(); ++i) {
         Edge e = incident_edges[i];
         int count = 0;
-	
-	for (size_t j = 0; j < triangle_index_list.size(); ++j){
-	    auto t = triangles[j];
-	    for(Edge edge_in_triangle: t.edges){
-	        if(is_same_edge(g, edge_in_triangle, e)){
-		   ++count;
-		}
-	    }
-	}
+
+        for (int j: triangle_index_list) {
+            // Check if edge e is contained in triangle t
+            for (auto &t = triangles[j]; Edge edge_in_triangle: t.edges) {
+                if (is_same_edge(g, edge_in_triangle, e)) {
+                    ++count;
+                }
+            }
+        }
 
         sens = std::max(sens, count);
     }
@@ -40,8 +43,8 @@ int global_sensitivity(const Graph &g, int i, const std::list<int> &triangle_ind
 void apply_global_sensitivity(const Graph &g,
                               const PrivateCountingConfig &cfg,
                               std::vector<TriangleCount> &counts,
-                              const std::vector<std::list<int>> &node_triangle_index_map,
-			      const std::vector<Triangle> &triangles) {
+                              const std::vector<std::list<int> > &node_triangle_index_map,
+                              const std::vector<Triangle> &triangles) {
     const double unbiased_sens_mul = 1 + 2 * (std::exp(cfg.weight_eps) / std::pow(1 - std::exp(cfg.weight_eps), 2));
 
     for (int i = 0; i < counts.size(); ++i) {

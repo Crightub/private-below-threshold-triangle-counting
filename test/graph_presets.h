@@ -209,11 +209,11 @@ inline Graph example_graph_2_scaled() {
         {{0, 3}, 4},
         {{0, 4}, 4},
         {{0, 5}, 4},
-        {{1, 2}, 4},
-        {{2, 3}, 4},
-        {{3, 4}, 4},
-        {{4, 5}, 4},
-        {{1, 5}, 4},
+        {{1, 2}, -1},
+        {{2, 3}, -1},
+        {{3, 4}, -1},
+        {{4, 5}, -1},
+        {{1, 5}, -1},
     };
 
     std::map<std::pair<int, int>, int> noise = {
@@ -394,6 +394,93 @@ inline Graph example_graph_6() {
         {{1, 3}, 1},
         {{1, 4}, -3},
         {{1, 5}, -3}
+    };
+
+    std::map<std::pair<int, int>, int> noise = {
+        {{0, 1}, 0},
+        {{0, 2}, 0},
+        {{0, 3}, 0},
+        {{0, 4}, 0},
+        {{0, 5}, 0},
+        {{1, 2}, 0},
+        {{1, 3}, 0},
+        {{1, 4}, 0},
+        {{1, 5}, 0},
+    };
+
+    assign_weights_and_noise(g, weights, noise);
+
+    return g;
+}
+
+inline Graph example_graph_7() {
+    Graph g(3);
+
+    boost::add_edge(0, 1, g);
+    boost::add_edge(0, 2, g);
+    boost::add_edge(1, 2, g);
+
+    std::map<std::pair<int, int>, int> weights = {
+        {{0, 1}, 0},
+        {{0, 2}, 0},
+        {{1, 2}, 0},
+    };
+
+    std::map<std::pair<int, int>, int> noise = {
+        {{0, 1}, 0},
+        {{0, 2}, 0},
+        {{1, 2}, 0},
+    };
+
+    assign_weights_and_noise(g, weights, noise);
+
+    return g;
+}
+
+inline Graph example_graph_8() {
+    Graph g(4);
+
+    boost::add_edge(0, 1, g);
+    boost::add_edge(0, 2, g);
+    boost::add_edge(1, 2, g);
+    boost::add_edge(0, 3, g);
+    boost::add_edge(1, 3, g);
+
+    std::map<std::pair<int, int>, int> weights = {
+        {{0, 1}, 0},
+        {{0, 2}, 1},
+        {{1, 2}, 0},
+        {{0, 3}, -1},
+        {{1, 3}, 0},
+    };
+
+    std::map<std::pair<int, int>, int> noise = {
+        {{0, 1}, 0},
+        {{0, 2}, 0},
+        {{1, 2}, 0},
+        {{0, 3}, 0},
+        {{1, 3}, 0},
+    };
+
+    assign_weights_and_noise(g, weights, noise);
+
+    return g;
+}
+
+
+inline Graph example_graph_9() {
+    Graph g = triangle_graph(6);
+
+    std::map<std::pair<int, int>, int> weights = {
+        {{0, 1}, 0},
+        {{0, 2}, -6},
+        {{0, 3}, -5},
+        {{0, 4}, -4},
+        {{0, 5}, 2},
+        {{1, 2}, 0},
+        {{1, 3}, 0},
+        {{1, 4}, 0},
+        {{1, 5}, 0},
     };
 
     std::map<std::pair<int, int>, int> noise = {

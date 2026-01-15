@@ -13,7 +13,7 @@ public:
 
     virtual std::pair<int, int> k_th_closest_distance(int k) = 0;
 
-    virtual long long sum_k_closest_distances(int k, int l) = 0;
+    virtual long long sum_k_closest_distances(int k) = 0;
 
     virtual int adjacent_to_target_count() const = 0;
 
@@ -37,30 +37,34 @@ class SingleTargetDistance : public TargetDistance {
     int mid_cnt; // count of x == t
 
 public:
-    SingleTargetDistance(std::vector<int> p, int t);
+    SingleTargetDistance(const std::vector<int> &p, int t);
 
-    std::pair<int, int> k_th_closest_distance(int k);
+    std::pair<int, int> k_th_closest_distance(int k) override;
 
-    long long sum_k_closest_distances(int k, int l);
+    long long sum_k_closest_distances(int k) override;
 
-    void update_target(int new_t);
+    void update_target(int new_t) override;
 
-    int adjacent_to_target_count() const {
+    [[nodiscard]] int adjacent_to_target_count() const override {
         return zero_cnt;
     }
 
-    int on_target_count() const {
+    [[nodiscard]] int on_target_count() const override {
         return mid_cnt;
     }
 
-    int outside_target_count() const {
+    [[nodiscard]] int outside_target_count() const override {
         return p.size() - zero_cnt - mid_cnt;
     }
 
-private:
-    int left_size() const;
+    [[nodiscard]] int size() const {
+        return p.size();
+    }
 
-    int right_size() const;
+private:
+    [[nodiscard]] int left_size() const;
+
+    [[nodiscard]] int right_size() const;
 
     void rebuild_indices();
 };
@@ -80,13 +84,13 @@ class DoubleTargetDistance : public TargetDistance {
 
 
 public:
-    DoubleTargetDistance(const std::vector<int> &points, int target);
+    DoubleTargetDistance(const std::vector<int> &p, int target);
 
     void update_target(int new_t);
 
     std::pair<int, int> k_th_closest_distance(int k);
 
-    long long sum_k_closest_distances(int k, int l);
+    long long sum_k_closest_distances(int k);
 
     int adjacent_to_target_count() const {
         return zero_cnt;

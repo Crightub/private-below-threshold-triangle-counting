@@ -1,7 +1,6 @@
 #include "utils.h"
 #include <vector>
 
-
 boost::minstd_rand rng(static_cast<unsigned int>(std::time(0)));
 
 std::vector<Node> neighbors(const Graph &g, Node &v) {

@@ -62,7 +62,7 @@ public:
     }
 
     std::tuple<int, int, int, int>
-    get_triangle_weights(Graph &g) {
+    get_triangle_weights(Graph &g) const {
         auto w_e1 = get_edge_weight(g, noisy_edge);
         auto noise_e1 = get_noise(g);
 
@@ -72,7 +72,7 @@ public:
         for (const auto &e: edges) {
             if (!is_same_edge(g, e, noisy_edge)) {
                 if (w_e2 == 0)
-                    w_e2 = get_edge_weight(g,e);
+                    w_e2 = get_edge_weight(g, e);
                 else
                     w_e3 = get_edge_weight(g, e);
             }
@@ -94,7 +94,6 @@ public:
 
     static int get_edge_weight(Graph &g, const Edge &e) {
         auto weight_map = get(&edge_info::weight, g);
-
         auto [x, exists] = boost::edge(boost::source(e, g), boost::target(e, g), g);
         if (!exists) {
             std::cerr << "ERROR: edge descriptor invalid!" << std::endl;
@@ -121,7 +120,7 @@ public:
 
         auto [x, exists] = boost::edge(boost::source(e, g), boost::target(e, g), g);
         if (!exists) {
-            std::cerr << "ERROR: edge descriptor invalid!" << std::endl;
+            std::cout << "ERROR: edge descriptor invalid!" << std::endl;
             return 0;
         }
 
@@ -129,12 +128,12 @@ public:
     }
 
 
-    int get_noise(Graph &g) {
+    int get_noise(Graph &g) const {
         auto noise_map = get(&edge_info::noise, g);
 
         auto [x, exists] = boost::edge(boost::source(noisy_edge, g), boost::target(noisy_edge, g), g);
         if (!exists) {
-            std::cerr << "ERROR: edge descriptor invalid!" << std::endl;
+            std::cout << "ERROR: edge descriptor invalid!" << std::endl;
             return 0;
         }
 
@@ -142,7 +141,7 @@ public:
     }
 
     bool contains_edge(Graph &g, const Edge &e) const {
-        for (Edge triangle_e : edges) {
+        for (Edge triangle_e: edges) {
             if (is_same_edge(g, triangle_e, e))
                 return true;
         }
