@@ -11,12 +11,24 @@ bool shift_set_can_be_increased(TargetDistance &td, int k, int m, int n, double 
 }
 
 /**
- *  @brief Computes the optimal number of values shifted from the outside set (O) to the target
- *  This function performs a binary search over the number of elements
- *  shifted outside the target set. For a given shift count `k`, it checks
- *  whether the shift can still be increased based on the objective value.
- *
- *  @complexity O(log^2 d) where d is the number of outside targets
+ * Returns objective function (without fixed factor e^(-beta * |z_i|)) during the shifting of values from O
+ */
+double obj_out_target(
+    TargetDistance &dtd,
+    int k,
+    int m,
+    int n,
+    double f,
+    double beta
+) {
+    long long sum_k = dtd.sum_k_closest_distances(k + m + n);
+    double linear = f * (k + n + m);
+    double exponent = -beta * sum_k;
+    return linear * std::exp(exponent);
+}
+
+/**
+ *  Computes the optimal number of values shifted from the outside set (O) to the target via binary search.
  */
 int opt_outside_shift_count(TargetDistance &td, int m, int n, double beta) {
     int lo = 0;
@@ -35,26 +47,18 @@ int opt_outside_shift_count(TargetDistance &td, int m, int n, double beta) {
     return lo;
 }
 
+/**
+ * Returns objective function (without fixed factor e^(-beta * |z_i|)) during the shifting of values from N
+ */
 double obj_on_target_pos(int k, int m, int n, double x, double beta) {
     // objective function during the step of assigning on target values for positive sum contribution
     double linear = ((m + k) * x) + ((n - k) * (-1.0 - 2.0 * x));
     return linear * std::exp(-beta * k);
 }
 
-double obj_out_target(
-    TargetDistance &dtd,
-    int k,
-    int m,
-    int n,
-    double f,
-    double beta
-) {
-    long long sum_k = dtd.sum_k_closest_distances(k + m + n);
-    double linear = f * (k + n + m);
-    double exponent = -beta * sum_k;
-    return linear * std::exp(exponent);
-}
-
+/**
+ * Return optimal number of values shifted from N
+ */
 int opt_on_target_shift_count_double(int m, int n, double x, double beta) {
     double y = m * x + (-1.0 - 2.0 * x) * n;
     double k_star = 1.0 / beta + y / (1.0 + 3.0 * x);
@@ -90,14 +94,8 @@ double opt_double_target_obj(DoubleTargetDistance dtd, double x, double beta) {
 }
 
 /**
- * @brief Computes the smooth sensitivity contribution for a fixed edge
- *        when the objective function contributes positively.
- *
- * This function evaluates the smooth sensitivity of the triangle-counting
- * statistic with respect to a fixed edge `e`, restricted to configurations
- * where the contribution of the objective function is positive.
- *
- * @complexity O(d + d * log^2 d)
+ * Computes the smooth sensitivity contribution for a fixed edge when the objective function contributes positively.
+ * Solves Problem (4) in the Appendix.
  */
 double fix_edge_sens_pos(Graph &g,
                          Edge e,
@@ -139,13 +137,19 @@ double fix_edge_sens_pos(Graph &g,
 }
 
 // <-------- Negative Contribution To Sum ---------->
+
+/**
+ * Returns objective function (without fixed factor e^(-beta * |z_i|)) during the shifting of values from M
+ */
 double obj_on_target_neg(int k, int m, int n, double x, double beta) {
     // objective function during the step of assigning on target values for negative sum contribution
     double linear = (-(m - k) * x) + ((n + k) * (1.0 + 2.0 * x));
     return linear * std::exp(-beta * k);
 }
 
-
+/**
+ * Computes the optimal number of values shifted from M
+ */
 int opt_on_target_shift_count_single(int m, int n, double x, double beta) {
     double k_star = 1.0 / beta + (-m * x + (1.0 + 2.0 * x) * n) / (1.0 + 3.0 * x);
 
@@ -160,6 +164,10 @@ int opt_on_target_shift_count_single(int m, int n, double x, double beta) {
     return (v1 > v0) ? k1 : k0;
 }
 
+
+/**
+ * Computes the optimal objective value for a fixed single target
+ */
 double opt_single_target_obj(SingleTargetDistance dtd, double x, double beta) {
     // Compute |M|, |N|
     int m = dtd.adjacent_to_target_count();
@@ -179,6 +187,10 @@ double opt_single_target_obj(SingleTargetDistance dtd, double x, double beta) {
     return obj_out_target(dtd, outside_t_k_star, m, n, 1 + 2 * x, beta);
 }
 
+/**
+ * Computes the smooth sensitivity contribution for a fixed edge when the objective function contributes negatively.
+ * Solves Problem (5) in the Appendix.
+ */
 double fix_edge_sens_neg(Graph &g,
                          Edge e,
                          const int lambda,
@@ -206,7 +218,6 @@ double fix_edge_sens_neg(Graph &g,
 
     for (int i = 0; i < targets.size(); ++i) {
         // for every target compute the optimal shift set
-        // distance from current target to zero target (z_i)
         double opt_t = opt_single_target_obj(std, x, beta) * std::exp(-beta * std::abs(targets[i] - zero_target));
         // check if new opt was found
         opt = std::max(opt, opt_t);
@@ -234,9 +245,11 @@ double smooth_sensitivity_unb(Graph &g,
         Node u = boost::adjacent_vertices(v, g).first[i];
         Edge e = boost::edge(u, v, g).first;
 
+        // Case b_i=1:
         double sens_inc_pos = fix_edge_sens_pos(g, e, lambda, triangles_index_list, triangles, beta, p, true);
         double sens_inc_neg = fix_edge_sens_neg(g, e, lambda, triangles_index_list, triangles, beta, p, true);
 
+        // Case b_i=-1:
         double sens_dec_pos = fix_edge_sens_neg(g, e, lambda, triangles_index_list, triangles, beta, p, false);
         double sens_dec_neg = fix_edge_sens_pos(g, e, lambda, triangles_index_list, triangles, beta, p, false);
 

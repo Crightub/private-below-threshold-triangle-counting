@@ -60,6 +60,7 @@ struct TriangleCount {
 };
 
 // <-- Debug function -->
+
 inline long long compute_c4_instances(const Graph &g) {
     long long sum = 0;
     int max_load = 0;
@@ -79,6 +80,7 @@ inline long long compute_c4_instances(const Graph &g) {
 }
 
 // <-- Print functions -->
+
 inline std::string vector_string(const std::vector<int> &v) {
     std::ostringstream oss;
     oss << "[";

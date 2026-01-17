@@ -35,6 +35,10 @@ void degree_vector(const Graph &g, std::vector<size_t> &degree) {
     }
 }
 
+/**
+ * Finds the set of all triangles by using an edge-iterator method with degree ordering
+ * Based "Arboricity and subgraph listing algorithms.",N. Chiba and T. Nishizeki, SIAM Journal on Computing, 14(1):210–223, 1985.
+ */
 std::vector<Triangle> find_triangles(Graph &g) {
     auto involved_triangles_map = get(&edge_info::involved_triangles, g);
 

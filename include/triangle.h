@@ -2,6 +2,14 @@
 
 #include "utils.h"
 
+/**
+ * Class to store triangle information.
+ *
+ * Stores:
+ *  - nodes, edges: node and edge representation
+ *  - noisy_edge: reference to the edge containing the noisy weight
+ *  - source_node: node responsible for counting the triangle
+ */
 class Triangle {
 public:
     std::vector<Node> nodes = std::vector<Node>(3);

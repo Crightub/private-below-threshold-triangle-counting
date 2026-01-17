@@ -1,7 +1,6 @@
 #ifndef NEGATIVE_TRIANGLE_COUNTING_DISTANCE_RETRIEVAL_H
 #define NEGATIVE_TRIANGLE_COUNTING_DISTANCE_RETRIEVAL_H
 
-#include <iostream>
 #include <vector>
 #include <utility>
 
@@ -23,6 +22,16 @@ public:
 };
 
 
+/**
+ * Maintains distance statistics to a single target value.
+ *
+ * Supports:
+ *  - k-th closest distance queries
+ *  - sum of k closest distances
+ *  - target updates
+ *
+ * This abstraction is used by the smooth sensitivity computation with negative contribution (Appendix A.3).
+ */
 class SingleTargetDistance : public TargetDistance {
     const std::vector<int> &p; // sorted
     std::vector<long long> pref;
@@ -70,6 +79,16 @@ private:
 };
 
 
+/**
+ * Maintains distance statistics to a double target value.
+ *
+ * Supports:
+ *  - k-th closest distance queries
+ *  - sum of k closest distances
+ *  - target updates
+ *
+ * This abstraction is used by the smooth sensitivity computation with positive contribution (Appendix A.1 & A.2).
+ */
 class DoubleTargetDistance : public TargetDistance {
     const std::vector<int> &p; // sorted
     int t;

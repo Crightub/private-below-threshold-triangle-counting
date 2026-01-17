@@ -8,9 +8,6 @@ using json = nlohmann::json;
 
 enum class Param {
     InstanceSize,
-    EdgeProbability,
-    WeightMu,
-    WeightStd,
     WeightEps,
     CountEps,
     Lambda,
@@ -21,12 +18,6 @@ inline std::string to_string(Param p) {
     switch (p) {
         case Param::InstanceSize:
             return "instance_size";
-        case Param::EdgeProbability:
-            return "edge_probability";
-        case Param::WeightMu:
-            return "weight_mu";
-        case Param::WeightStd:
-            return "weight_std";
         case Param::WeightEps:
             return "weight_eps";
         case Param::CountEps:
@@ -42,9 +33,6 @@ inline std::string to_string(Param p) {
 
 const std::unordered_map<std::string, Param> stringToParam = {
     {"instance_size", Param::InstanceSize},
-    {"edge_probability", Param::EdgeProbability},
-    {"weight_mu", Param::WeightMu},
-    {"weight_std", Param::WeightStd},
     {"weight_eps", Param::WeightEps},
     {"count_eps", Param::CountEps},
     {"lambda", Param::Lambda},
@@ -72,6 +60,7 @@ struct Stat {
     std::vector<PrivateCountingResult> results;
 
     Stat() = default;
+
     explicit Stat(int _n) : n(_n) {
     }
 
@@ -83,7 +72,7 @@ struct Stat {
         smooth_unbiased += 1.0 / n * res.smooth_unbiased;
         smooth_biased += 1.0 / n * res.smooth_biased;
 
-        naive_l2 += 1.0 / n* (res.naive - res.opt) * (res.naive - res.opt);
+        naive_l2 += 1.0 / n * (res.naive - res.opt) * (res.naive - res.opt);
         global_unbiased_l2 += 1.0 / n * (res.global_unbiased - res.opt) * (res.global_unbiased - res.opt);
         global_biased_l2 += 1.0 / n * (res.global_biased - res.opt) * (res.global_biased - res.opt);
         smooth_unbiased_l2 += 1.0 / n * (res.smooth_unbiased - res.opt) * (res.smooth_unbiased - res.opt);

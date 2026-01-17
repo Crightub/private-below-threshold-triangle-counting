@@ -8,27 +8,31 @@
 #include "triangle.h"
 #include <omp.h>
 
+/**
+ * Implements the local counting for below-threshold triangles step 2.
+ * Simultaneously computes the local counts for opt, naive approach, unbiased estimator and biased estimator.
 
+ */
 void count_local_negative_triangles(Graph &g,
                                     const PrivateCountingConfig &base_cfg,
                                     std::vector<TriangleCount> &counts,
-                                    std::vector<std::list<int>> &node_triangle_index_map,
-				    std::vector<Triangle> &triangles
+                                    std::vector<std::list<int> > &node_triangle_index_map,
+                                    std::vector<Triangle> &triangles
 ) {
     const double p = std::exp(-base_cfg.weight_eps);
     int n_nodes = counts.size();
     int n_threads = omp_get_max_threads();
 
-    std::vector<std::unordered_map<int, TriangleCount>> local_counts(n_threads);
-    std::vector<std::unordered_map<int, std::vector<int>>> local_index_maps(n_threads);
+    std::vector<std::unordered_map<int, TriangleCount> > local_counts(n_threads);
+    std::vector<std::unordered_map<int, std::vector<int> > > local_index_maps(n_threads);
 
-    #pragma omp parallel for schedule(dynamic)
+#pragma omp parallel for schedule(dynamic)
     for (size_t i = 0; i < triangles.size(); ++i) {
         int tid = omp_get_thread_num();
         Triangle &t = triangles[i];
 
         if (!t.is_assigned) {
-            #pragma omp critical
+#pragma omp critical
             std::cerr << "Triangle is not yet assigned!" << std::endl;
         }
 
@@ -38,29 +42,29 @@ void count_local_negative_triangles(Graph &g,
         int node = t.source_node;
 
         TriangleCount &lc = local_counts[tid][node];
-        lc.naive    += biased_estimator(w_e1 + triv_noise_1, w_e2 + triv_noise_2, w_e3 + triv_noise_3, base_cfg.lambda);
-        lc.opt      += biased_estimator(w_e1, w_e2, w_e3, base_cfg.lambda);
+        lc.naive += biased_estimator(w_e1 + triv_noise_1, w_e2 + triv_noise_2, w_e3 + triv_noise_3, base_cfg.lambda);
+        lc.opt += biased_estimator(w_e1, w_e2, w_e3, base_cfg.lambda);
         lc.unbiased += unbiased_estimator(noise_e1 + w_e1 + w_e2 + w_e3, p, base_cfg.lambda);
-        lc.biased   += biased_estimator(noise_e1 + w_e1, w_e2, w_e3, base_cfg.lambda);
+        lc.biased += biased_estimator(noise_e1 + w_e1, w_e2, w_e3, base_cfg.lambda);
 
         local_index_maps[tid][node].push_back(static_cast<int>(i));
     }
 
     for (int tid = 0; tid < n_threads; ++tid) {
-        for (auto &kv : local_counts[tid]) {
+        for (auto &kv: local_counts[tid]) {
             int node = kv.first;
             const TriangleCount &lc = kv.second;
-            counts[node].naive    += lc.naive;
-            counts[node].opt      += lc.opt;
+            counts[node].naive += lc.naive;
+            counts[node].opt += lc.opt;
             counts[node].unbiased += lc.unbiased;
-            counts[node].biased   += lc.biased;
+            counts[node].biased += lc.biased;
         }
 
-        for (auto &kv : local_index_maps[tid]) {
+        for (auto &kv: local_index_maps[tid]) {
             int node = kv.first;
             std::vector<int> &vec = kv.second;
             auto &dest_list = node_triangle_index_map[node];
-            for (int idx : vec) dest_list.push_back(idx);
+            for (int idx: vec) dest_list.push_back(idx);
         }
     }
 }
@@ -68,8 +72,8 @@ void count_local_negative_triangles(Graph &g,
 void publish_local_counts(Graph &g,
                           const PrivateCountingConfig &cfg,
                           std::vector<TriangleCount> &counts,
-                          std::vector<std::list<int>> &node_triangle_index_map,
-			  const std::vector<Triangle> &triangles) {
+                          std::vector<std::list<int> > &node_triangle_index_map,
+                          const std::vector<Triangle> &triangles) {
     if (!cfg.use_smooth_sensitivity) {
         apply_global_sensitivity(g, cfg, counts, node_triangle_index_map, triangles);
     }
@@ -79,13 +83,18 @@ void publish_local_counts(Graph &g,
     }
 }
 
+/**
+ * Executes the complete step 2 of our algorithm.
+ * It first counts the below-threshold triangles locally
+ * and publishes the count with global sensitivity and smooth sensitivity.
+ */
 PrivateCountingResult private_counting(
     Graph &g,
     PrivateCountingConfig &base_cfg,
     const std::vector<Triangle> *ptr_triangles) {
     std::size_t n = num_vertices(g);
     std::vector<TriangleCount> global_counts(n);
-    std::vector<std::list<int>> node_triangle_map = std::vector<std::list<int>>(n);
+    std::vector<std::list<int> > node_triangle_map = std::vector<std::list<int> >(n);
     std::vector<Triangle> triangles;
 
     if (ptr_triangles == nullptr) {

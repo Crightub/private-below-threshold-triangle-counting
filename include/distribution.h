@@ -24,7 +24,10 @@ inline double sample_laplace(const double mu, const double b)
     return (u < 0.5) ? mu + b * log(2.0 * u) : mu - b * log(2 * (1 - u));
 }
 
-
+/**
+ * Samples Z from a probability distribution proportional to 1/(1+|z|^\gamma).
+ * This sample is used during the publishing via beta-smooth sensitivity.
+ */
 class PolynomialTailRV {
 private:
     int gamma;

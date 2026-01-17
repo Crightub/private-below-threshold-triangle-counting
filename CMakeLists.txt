@@ -3,12 +3,12 @@ cmake_minimum_required(VERSION 3.10...3.25)
 project(negative_triangle_counting)
 
 # Set C++ version
-set(CMAKE_CXX_STANDARD 23)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_FLAGS_RELEASE "-O2")
 
-#Sanitizer options
-option(ENABLE_SANITIZERS "Build with Address/Undefined sanitizers" ON)
+# Sanitizer options (uncomment for address sanitizers)
+#option(ENABLE_SANITIZERS "Build with Address/Undefined sanitizers" ON)
 
 if (ENABLE_SANITIZERS)
     message(STATUS "Sanitizers enabled")
@@ -17,6 +17,7 @@ if (ENABLE_SANITIZERS)
     set(CMAKE_LINKER_FLAGS "${CMAKE_LINKER_FLAGS} ${SANITIZER_FLAGS}")
 endif ()
 
+# Insert OpenMP path on MAC
 if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     set(OpenMP_CXX_FLAGS "-Xpreprocessor -fopenmp -I/opt/homebrew/opt/libomp/include")
     set(OpenMP_CXX_LIB_NAMES "omp")
@@ -38,13 +39,13 @@ include_directories(${CMAKE_SOURCE_DIR}/external)
 add_executable(benchmark
         src/benchmark.cpp
         src/counting.cpp
-        src/graph_generation.cpp
         src/utils.cpp
-        src/smooth_sens_biased.cpp
-        src/global_sensitivity.cpp
+        src/graph_generation.cpp
         src/graph_statistics.cpp
-        src/smooth_sens_unbiased.cpp
         src/distance_retrieval.cpp
+        src/global_sensitivity.cpp
+        src/smooth_sens_unbiased.cpp
+        src/smooth_sens_biased.cpp
         src/smooth_sens_utils.cpp
 )
 
@@ -54,36 +55,15 @@ target_link_libraries(benchmark
 # Enable testing support
 enable_testing()
 
-#add_executable(treap_test test/treap_test.cpp src/counting.cpp src/graph_generation.cpp src/utils.cpp src/smooth_sensitivity.cpp src/global_sensitivity.cpp
-#        src/smooth_sensitivity.cpp
-#        src/smooth_sensitivity.cpp)
-#target_link_libraries(treap_test
-#        Boost::headers
-#)
-#
-#add_executable(counting_test test/counting_test.cpp src/counting.cpp src/graph_generation.cpp src/utils.cpp src/smooth_sensitivity.cpp src/global_sensitivity.cpp src/graph_statistics.cpp
-#        src/smooth_sensitivity.cpp
-#        src/smooth_sensitivity.cpp)
-#target_link_libraries(counting_test
-#        Boost::headers
-#)
-#
-#add_executable(assignment_test test/assignment_test.cpp src/counting.cpp src/graph_generation.cpp src/utils.cpp src/smooth_sensitivity.cpp src/global_sensitivity.cpp src/graph_statistics.cpp
-#        src/smooth_sensitivity.cpp
-#        src/smooth_sensitivity.cpp)
-#target_link_libraries(assignment_test
-#        Boost::headers
-#)
-#
 add_executable(sensitivity_test
         test/sensitivity_test.cpp
-        src/smooth_sens_biased.cpp
-        src/smooth_sens_utils.cpp
-        src/global_sensitivity.cpp
+        src/utils.cpp
         src/distance_retrieval.cpp
         src/graph_statistics.cpp
+        src/global_sensitivity.cpp
         src/smooth_sens_unbiased.cpp
-        src/utils.cpp
+        src/smooth_sens_biased.cpp
+        src/smooth_sens_utils.cpp
 )
 
 target_link_libraries(sensitivity_test
@@ -96,7 +76,8 @@ add_executable(smooth_sens_unb_test
         src/smooth_sens_utils.cpp
         src/distance_retrieval.cpp
         src/utils.cpp
-        src/graph_statistics.cpp)
+        src/graph_statistics.cpp
+)
 
 target_link_libraries(smooth_sens_unb_test
         Boost::headers
@@ -112,11 +93,7 @@ target_link_libraries(distance_test
 )
 
 if (OpenMP_CXX_FOUND)
-    #    target_link_libraries(treap_test OpenMP::OpenMP_CXX)
-    #    target_link_libraries(assignment_test OpenMP::OpenMP_CXX)
     target_link_libraries(sensitivity_test OpenMP::OpenMP_CXX)
-    #    target_link_libraries(counting_test OpenMP::OpenMP_CXX)
-    #    target_link_libraries(distribution_test OpenMP::OpenMP_CXX)
     target_link_libraries(benchmark OpenMP::OpenMP_CXX)
     target_link_libraries(distance_test OpenMP::OpenMP_CXX)
     target_link_libraries(smooth_sens_unb_test OpenMP::OpenMP_CXX)
@@ -124,8 +101,4 @@ endif ()
 
 add_test(NAME SmoothSensitivityTest COMMAND smooth_sens_unb_test)
 add_test(NAME DistanceTest COMMAND distance_test)
-#add_test(NAME TreapTest COMMAND treap_test)
 add_test(NAME SensitivityTest COMMAND sensitivity_test)
-#add_test(NAME AssignmentTest COMMAND assignment_test)
-#add_test(NAME CountingTest COMMAND counting_test)
-#add_test(NAME DistributionTest COMMAND distribution_test)

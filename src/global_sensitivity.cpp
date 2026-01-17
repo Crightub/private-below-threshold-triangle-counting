@@ -8,6 +8,10 @@
 #include "utils.h"
 struct PrivateCountingConfig;
 
+/**
+ * For edge i, return the maximum number of assigned triangles i is contained in.
+ * Done by iterating over all assigned triangles and checking if i is included.
+ */
 int global_sensitivity(const Graph &g,
                        int i,
                        const std::list<int> &triangle_index_list,
@@ -19,7 +23,7 @@ int global_sensitivity(const Graph &g,
         incident_edges.push_back(*ei);
     }
 
-    // #pragma omp parallel for reduction(max:sens)
+    #pragma omp parallel for reduction(max:sens)
     for (size_t i = 0; i < incident_edges.size(); ++i) {
         Edge e = incident_edges[i];
         int count = 0;
@@ -39,7 +43,11 @@ int global_sensitivity(const Graph &g,
     return sens;
 }
 
-
+/**
+ * Applies global sensitivity to the local counts.
+ * Computes the global sensitivity first
+ * and then samples a laplace noise based on the sensitivity and privacy parameter.
+ */
 void apply_global_sensitivity(const Graph &g,
                               const PrivateCountingConfig &cfg,
                               std::vector<TriangleCount> &counts,

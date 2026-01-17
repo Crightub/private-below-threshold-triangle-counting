@@ -53,11 +53,9 @@ double fixed_edge_sensitivity(Graph &g,
 
     for (int i = 0; i < targets.size(); ++i) {
         // for every target compute the optimal shift set
-        // distance from current target to zero target (z_i)
         int k = shift_count(std, beta);
         double opt_t = obj(std, k, beta) * std::exp(-beta * std::abs(targets[i] - zero_target));
 
-        // check if new opt was found
         opt = std::max(opt, opt_t);
 
         // advance target
@@ -73,7 +71,7 @@ double smooth_sensitivity(Graph &g, Node v, const int lambda, const std::list<in
                           const std::vector<Triangle> &triangles, double beta) {
     double sens = 0;
 
-    // #pragma omp parallel for reduction(max:sens)
+    #pragma omp parallel for reduction(max:sens)
     for (int i = 0; i < boost::degree(v, g); ++i) {
         // Fix the edge e = (v,u) and compute the maximum smooth sensitivity achieved by increasing / decreasing e
         Node u = boost::adjacent_vertices(v, g).first[i];
@@ -99,7 +97,7 @@ void apply_smooth_sensitivity(Graph &g,
     const double smooth_sens_mult = 2 * std::pow(cfg.gamma - 1, (cfg.gamma - 1) / cfg.gamma);
     auto rv = PolynomialTailRV(cfg.gamma);
 
-#pragma omp parallel for
+    #pragma omp parallel for
     for (int i = 0; i < counts.size(); i++) {
         auto &triangle_index_list = node_triangle_index_map[i];
 

@@ -27,7 +27,7 @@ void reset_loads(Graph &g) {
 Benchmark run_instance_benchmark(BenchmarkConfig cfg) {
     Graph base_g = load_graph(cfg);
 
-    std::cout << "Loaded SNAP " << cfg.graph_name << " graph with " << boost::num_vertices(base_g) << " vertices and "
+    std::cout << "Loaded " << cfg.graph_name << " graph with " << boost::num_vertices(base_g) << " vertices and "
             << boost::num_edges(base_g) << " edges." << std::endl;
 
     // Setup load balancing comparison -> only used if cfg.compare_load_balancing is activated
@@ -60,11 +60,11 @@ Benchmark run_instance_benchmark(BenchmarkConfig cfg) {
             t.assign_triangle(g_load_balance, true);
         }
 
-        if (cfg.compare_load_balancing) {
-            for (Triangle &t: triangles_no_load_balance) {
-                t.assign_triangle(g_no_load_balance, false);
-            }
-        }
+        // if (cfg.compare_load_balancing) {
+        //     for (Triangle &t: triangles_no_load_balance) {
+        //         t.assign_triangle(g_no_load_balance, false);
+        //     }
+        // }
 
         std::cout << "Start iterations for " << to_string(cfg.param) << ": " << value << std::endl;
         auto avg_load_balance = Stat(cfg.instances_per_iter);
@@ -78,14 +78,14 @@ Benchmark run_instance_benchmark(BenchmarkConfig cfg) {
                                                                       &triangles_load_balance);
             avg_load_balance.update(res_load_balance);
 
-            // if (cfg.compare_load_balancing) {
-            //     std::cout << "Compute lowest index priority result..." << std::endl;
-            //     add_discrete_laplace_noise(g_no_load_balance, cfg.weight_eps, cfg.count_eps);
-            //
-            //     PrivateCountingResult res_no_load_balance = private_counting(
-            //         g_no_load_balance, no_load_balancing_base_cfg, &triangles_no_load_balance);
-            //     avg_no_load_balance.update(res_no_load_balance);
-            // }
+            if (cfg.compare_load_balancing) {
+                std::cout << "Compute lowest index priority result..." << std::endl;
+                add_discrete_laplace_noise(g_no_load_balance, cfg.weight_eps, cfg.count_eps);
+
+                PrivateCountingResult res_no_load_balance = private_counting(
+                    g_no_load_balance, no_load_balancing_base_cfg, &triangles_no_load_balance);
+                avg_no_load_balance.update(res_no_load_balance);
+            }
         }
 
         wrap_up_stats(results_load_balance, value, avg_load_balance);
@@ -115,11 +115,11 @@ Benchmark run_param_benchmark(BenchmarkConfig cfg) {
         t.assign_triangle(g_load_balance, true);
     }
 
-    if (cfg.compare_load_balancing) {
-        for (Triangle &t: triangles_no_load_balance) {
-            t.assign_triangle(g_no_load_balance, false);
-        }
-    }
+    // if (cfg.compare_load_balancing) {
+    //     for (Triangle &t: triangles_no_load_balance) {
+    //         t.assign_triangle(g_no_load_balance, false);
+    //     }
+    // }
 
     // Setup load balancing comparison -> only used if cfg.compare_load_balancing is activated
     std::map<double, Stat> results_load_balance;
@@ -166,7 +166,7 @@ Benchmark run_param_benchmark(BenchmarkConfig cfg) {
 
 int main(int argc, char *argv[]) {
     BenchmarkConfig cfg = parse_benchmark_config(argc, argv);
-    cfg.compare_load_balancing = true;
+    cfg.compare_load_balancing = false;
     std::string base_file_name = generate_filename(cfg);
 
     std::string benchmark_filename = "../benchmark/" + base_file_name + ".json";

@@ -1,6 +1,5 @@
 #pragma once
 
-#include "treap.h"
 #include "triangle.h"
 
 struct PrivateCountingConfig;

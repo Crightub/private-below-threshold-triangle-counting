@@ -6,6 +6,9 @@
 #include "triangle.h"
 #include "utils.h"
 
+/**
+ * Builds the vector c from Subsection A.1
+ */
 std::vector<int> setup_partial_triangle_weights(Graph &g,
                                                 const Edge &e,
                                                 const std::list<int> &triangle_index_list,
@@ -54,6 +57,9 @@ std::pair<std::vector<int>, int> setup_targets_biased(Graph &g,
     return {targets, t};
 }
 
+/**
+ * Setup set of possible targets T = {c_j + d :  c_j \in c, d \in {-1,0,1}} union {lambda - 1 - w_e}.
+ */
 std::pair<std::vector<int>, int> setup_targets_unbiased(Graph &g,
                                                         const Edge &e,
                                                         int lambda,
